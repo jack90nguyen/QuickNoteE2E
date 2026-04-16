@@ -4,12 +4,18 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useNotes } from '@/contexts/NotesContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { Lock, Search, SquarePen, LogOut } from 'lucide-react';
+import { Lock, Search, SquarePen, LogOut, Sun, Moon } from 'lucide-react';
+import { useTheme } from 'next-themes';
+import { useEffect, useState } from 'react';
 
 export default function NotesSidebar() {
   const { notes, isLoading, searchQuery, setSearchQuery } = useNotes();
   const { user, logout } = useAuth();
   const pathname = usePathname();
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => setMounted(true), []);
 
   const filteredNotes = notes.filter(note => 
     note.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -87,6 +93,18 @@ export default function NotesSidebar() {
         >
           <LogOut size={16} />
         </button>
+      </div>
+    </div>
+  );
+}    )}
+          <button 
+            onClick={logout}
+            className="p-1.5 text-zinc-500 hover:text-red-500 rounded-md transition"
+            title="Logout"
+          >
+            <LogOut size={16} />
+          </button>
+        </div>
       </div>
     </div>
   );

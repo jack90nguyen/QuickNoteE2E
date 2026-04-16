@@ -258,7 +258,7 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
           />
         </div>
 
-        <div className="flex-1 overflow-hidden px-4" data-color-mode="dark">
+        <div className="flex-1 overflow-hidden px-4" data-color-mode={theme === 'dark' ? 'dark' : 'light'}>
           {/* We will apply CSS in globals.css to style .w-md-editor */}
           <MDEditor
             value={content}
@@ -290,5 +290,7 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
         />
       </div>
     </div>
+  );
+}}>
   );
 }
