@@ -14,9 +14,20 @@ const spaceMono = Space_Mono({
 export const metadata: Metadata = {
   title: "QuickNote",
   description: "Secure markdown notes with E2E encryption",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "QuickNote",
+  },
   icons: {
     icon: "/favicon.svg",
+    apple: "/favicon.svg",
   },
+};
+
+export const viewport = {
+  themeColor: "#2563eb",
 };
 
 export default function RootLayout({
