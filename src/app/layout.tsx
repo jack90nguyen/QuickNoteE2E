@@ -13,7 +13,10 @@ const spaceMono = Space_Mono({
 
 export const metadata: Metadata = {
   title: "QuickNote",
-  description: "Secure markdown notes",
+  description: "Secure markdown notes with E2E encryption",
+  icons: {
+    icon: "/favicon.svg",
+  },
 };
 
 export default function RootLayout({

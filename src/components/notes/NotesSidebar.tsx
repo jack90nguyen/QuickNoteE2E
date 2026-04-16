@@ -17,13 +17,10 @@ export default function NotesSidebar() {
 
   useEffect(() => setMounted(true), []);
 
-  const filteredNotes = notes.filter(note => 
-    note.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    note.content.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const isIndexPath = pathname === '/notes';
 
   return (
-    <div className="w-80 flex-shrink-0 flex flex-col h-full bg-[#f9f9f9] dark:bg-[#252525] border-r border-zinc-200 dark:border-zinc-800">
+    <div className={`${isIndexPath ? 'flex w-full' : 'hidden'} md:flex md:w-80 flex-shrink-0 flex-col h-full bg-[#f9f9f9] dark:bg-[#252525] border-r border-zinc-200 dark:border-zinc-800`}>
       {/* Top bar */}
       <div className="p-4 flex items-center justify-between gap-2 border-b border-zinc-200 dark:border-zinc-800">
         <div className="relative flex-1">

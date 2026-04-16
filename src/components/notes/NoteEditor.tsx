@@ -193,6 +193,14 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
       {/* Top Toolbar */}
       <div className="flex items-center justify-between px-6 py-3 border-b border-zinc-200 dark:border-zinc-800">
         <div className="flex items-center gap-2">
+          <Link 
+            href="/notes" 
+            className="md:hidden flex items-center gap-1 mr-2 px-2 py-1.5 text-xs font-bold text-blue-600 dark:text-blue-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-md transition"
+          >
+            <ChevronLeft size={16} />
+            All Notes
+          </Link>
+
           <button
             onClick={() => setIsEncrypted(!isEncrypted)}
             className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition ${
