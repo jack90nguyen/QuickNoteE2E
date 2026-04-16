@@ -86,17 +86,16 @@ export default function NotesSidebar() {
         <div className="text-xs font-medium text-zinc-600 dark:text-zinc-400 truncate pr-2">
           {user?.email}
         </div>
-        <button 
-          onClick={logout}
-          className="text-zinc-500 hover:text-red-500 transition"
-          title="Logout"
-        >
-          <LogOut size={16} />
-        </button>
-      </div>
-    </div>
-  );
-}    )}
+        <div className="flex items-center gap-2">
+          {mounted && (
+            <button
+              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+              className="p-1.5 text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 rounded-md transition"
+              title="Toggle Theme"
+            >
+              {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+            </button>
+          )}
           <button 
             onClick={logout}
             className="p-1.5 text-zinc-500 hover:text-red-500 rounded-md transition"

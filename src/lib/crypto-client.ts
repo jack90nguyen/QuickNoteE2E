@@ -20,13 +20,13 @@ export function base64ToBuffer(base64: string): ArrayBuffer {
 // Generate random salt (16 bytes)
 export function generateSalt(): string {
   const salt = window.crypto.getRandomValues(new Uint8Array(16));
-  return bufferToBase64(salt);
+  return bufferToBase64(salt.buffer);
 }
 
 // Generate random master key (32 bytes - AES-256)
 export function generateMasterKeyBase64(): string {
   const key = window.crypto.getRandomValues(new Uint8Array(32));
-  return bufferToBase64(key);
+  return bufferToBase64(key.buffer);
 }
 
 // Derive AES-GCM key from password and salt using PBKDF2
@@ -64,7 +64,7 @@ export async function encryptMasterKey(masterKeyBase64: string, derivedKey: Cryp
   const encrypted = await window.crypto.subtle.encrypt(
     {
       name: 'AES-GCM',
-      iv: iv,
+      iv: iv.buffer,
     },
     derivedKey,
     masterKeyBuffer
@@ -72,7 +72,7 @@ export async function encryptMasterKey(masterKeyBase64: string, derivedKey: Cryp
 
   return {
     encryptedMasterKey: bufferToBase64(encrypted),
-    masterKeyIv: bufferToBase64(iv),
+    masterKeyIv: bufferToBase64(iv.buffer),
   };
 }
 
@@ -114,7 +114,7 @@ export async function encryptNoteContent(content: string, masterKeyBase64: strin
   const encrypted = await window.crypto.subtle.encrypt(
     {
       name: 'AES-GCM',
-      iv: iv,
+      iv: iv.buffer,
     },
     key,
     enc.encode(content)
@@ -122,7 +122,7 @@ export async function encryptNoteContent(content: string, masterKeyBase64: strin
 
   return {
     ciphertext: bufferToBase64(encrypted),
-    iv: bufferToBase64(iv),
+    iv: bufferToBase64(iv.buffer),
   };
 }
 

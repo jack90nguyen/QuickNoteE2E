@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useNotes } from '@/contexts/NotesContext';
 import { encryptNoteContent, decryptNoteContent } from '@/lib/crypto-client';
 import { Save, Shield, ShieldOff, Trash2, Eye, EyeOff } from 'lucide-react';
+import { useTheme } from 'next-themes';
 
 const MDEditor = dynamic(
   () => import('@uiw/react-md-editor').then((mod) => mod.default),
@@ -48,6 +49,7 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
   const { masterKey } = useAuth();
   const { refreshNotes, deleteNote } = useNotes();
   const router = useRouter();
+  const { theme } = useTheme();
 
   useEffect(() => {
     if (noteId) {
@@ -290,7 +292,5 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
         />
       </div>
     </div>
-  );
-}}>
   );
 }
