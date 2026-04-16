@@ -1,0 +1,62 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+}
+
+/* Markdown Editor Overrides to make it look native/seamless */
+.w-md-editor {
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  background-color: transparent !important;
+}
+
+.w-md-editor-toolbar {
+  border-bottom: 1px solid #27272a !important; /* zinc-800 */
+  background-color: transparent !important;
+}
+
+@media (prefers-color-scheme: light) {
+  .w-md-editor-toolbar {
+    border-bottom: 1px solid #e4e4e7 !important; /* zinc-200 */
+  }
+}
+
+.w-md-editor-content {
+  background-color: transparent !important;
+}
+
+.w-md-editor-text-pre, .w-md-editor-text-input {
+  font-size: 15px !important;
+  line-height: 1.6 !important;
+  font-family: var(--font-space-mono), monospace !important;
+}
+
+.wmde-markdown,
+.wmde-markdown-var,
+.wmde-markdown-color {
+  background-color: transparent !important;
+  background: none !important;
+  font-family: var(--font-space-mono), monospace !important;
+}
