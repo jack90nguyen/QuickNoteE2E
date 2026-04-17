@@ -26,6 +26,7 @@ interface NotesContextType {
   notes: Note[];
   isLoading: boolean;
   refreshNotes: () => Promise<void>;
+  upsertNote: (note: Note) => void;
   deleteNote: (id: string) => Promise<void>;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
@@ -78,6 +79,15 @@ export function NotesProvider({ children }: { children: ReactNode }) {
     fetchNotes();
   }, [fetchNotes]);
 
+  const upsertNote = useCallback((note: Note) => {
+    setNotes((prev) => {
+      const without = prev.filter((n) => n._id !== note._id);
+      return [note, ...without].sort(
+        (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+      );
+    });
+  }, []);
+
   const deleteNote = useCallback(async (id: string) => {
     if (!confirm('Are you sure you want to delete this note?')) return;
     try {
@@ -95,11 +105,12 @@ export function NotesProvider({ children }: { children: ReactNode }) {
       notes,
       isLoading,
       refreshNotes: fetchNotes,
+      upsertNote,
       deleteNote,
       searchQuery,
       setSearchQuery,
     }),
-    [notes, isLoading, fetchNotes, deleteNote, searchQuery]
+    [notes, isLoading, fetchNotes, upsertNote, deleteNote, searchQuery]
   );
 
   return <NotesContext.Provider value={value}>{children}</NotesContext.Provider>;

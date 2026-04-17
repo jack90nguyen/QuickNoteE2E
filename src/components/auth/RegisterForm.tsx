@@ -53,6 +53,7 @@ export default function RegisterForm() {
           kdfSalt: salt,
           encryptedMasterKey,
           masterKeyIv,
+          remember: true,
         }),
       });
 

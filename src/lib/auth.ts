@@ -10,8 +10,10 @@ const JWT_SECRET = (() => {
   return 'dev-only-fallback-secret-do-not-use-in-prod';
 })();
 
-export function signToken(payload: object) {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
+export function signToken(payload: object, remember: boolean = false) {
+  return jwt.sign(payload, JWT_SECRET, {
+    expiresIn: remember ? '365d' : '7d',
+  });
 }
 
 export function verifyToken(token: string) {
@@ -38,15 +40,19 @@ export async function getUserFromSession() {
   return decoded;
 }
 
-export async function setAuthCookie(token: string) {
+export async function setAuthCookie(token: string, remember: boolean = false) {
   const cookieStore = await cookies();
-  cookieStore.set('auth-token', token, {
+  const base = {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
+    sameSite: 'lax' as const,
     path: '/',
-    maxAge: 7 * 24 * 60 * 60, // 7 days
-  });
+  };
+  cookieStore.set(
+    'auth-token',
+    token,
+    remember ? { ...base, maxAge: 365 * 24 * 60 * 60 } : base,
+  );
 }
 
 export async function removeAuthCookie() {

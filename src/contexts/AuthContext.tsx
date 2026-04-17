@@ -41,11 +41,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const res = await fetch('/api/auth/me');
         if (res.ok) {
           const data = await res.json();
-          setUser(data.user);
-          const storedKey = sessionStorage.getItem('masterKey');
+          const storedKey = localStorage.getItem('masterKey');
           if (storedKey) {
+            setUser(data.user);
             setMasterKey(storedKey);
+          } else {
+            await fetch('/api/auth/logout', { method: 'POST' });
+            setUser(null);
+            setMasterKey(null);
           }
+        } else {
+          localStorage.removeItem('masterKey');
         }
       } catch (error) {
         console.error('Failed to fetch session', error);
@@ -59,14 +65,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = useCallback((newUser: User, newMasterKey: string) => {
     setUser(newUser);
     setMasterKey(newMasterKey);
-    sessionStorage.setItem('masterKey', newMasterKey);
+    localStorage.setItem('masterKey', newMasterKey);
   }, []);
 
   const logout = useCallback(async () => {
     await fetch('/api/auth/logout', { method: 'POST' });
     setUser(null);
     setMasterKey(null);
-    sessionStorage.removeItem('masterKey');
+    localStorage.removeItem('masterKey');
     router.push('/login');
   }, [router]);
 

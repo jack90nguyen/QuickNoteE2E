@@ -53,7 +53,7 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
   };
 
   const { masterKey } = useAuth();
-  const { refreshNotes, deleteNote } = useNotes();
+  const { upsertNote, deleteNote } = useNotes();
   const router = useRouter();
 
   useEffect(() => {
@@ -161,7 +161,15 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
       }
 
       const result = await res.json();
-      await refreshNotes();
+      upsertNote({
+        _id: result.note._id,
+        title: result.note.title,
+        content: content || "",
+        isEncrypted: result.note.isEncrypted,
+        iv: result.note.iv,
+        updatedAt: result.note.updatedAt,
+        tags: result.note.tags || [],
+      });
       setIsDirty(false);
       setLastSaved(new Date());
 

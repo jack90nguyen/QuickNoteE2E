@@ -12,6 +12,7 @@ import Link from 'next/link';
 export default function LoginForm() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [remember, setRemember] = useState(false);
   const { login } = useAuth();
   const router = useRouter();
 
@@ -34,6 +35,7 @@ export default function LoginForm() {
         body: JSON.stringify({
           email: data.email,
           password: data.password,
+          remember,
         }),
       });
 
@@ -97,6 +99,16 @@ export default function LoginForm() {
           />
           {errors.password && <p className="mt-1 text-sm text-red-500">{errors.password.message}</p>}
         </div>
+
+        <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 select-none">
+          <input
+            type="checkbox"
+            checked={remember}
+            onChange={(e) => setRemember(e.target.checked)}
+            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700"
+          />
+          Remember me
+        </label>
 
         <button
           type="submit"

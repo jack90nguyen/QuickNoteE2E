@@ -16,7 +16,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const { email, password, kdfSalt, encryptedMasterKey, masterKeyIv } = parsed.data;
+    const { email, password, kdfSalt, encryptedMasterKey, masterKeyIv, remember } = parsed.data;
 
     await connectToDatabase();
 
@@ -37,8 +37,8 @@ export async function POST(req: Request) {
 
     await user.save();
 
-    const token = signToken({ userId: user._id.toString() });
-    await setAuthCookie(token);
+    const token = signToken({ userId: user._id.toString() }, remember);
+    await setAuthCookie(token, remember);
 
     return NextResponse.json(
       {
