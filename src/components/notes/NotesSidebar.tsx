@@ -17,6 +17,11 @@ export default function NotesSidebar() {
 
   useEffect(() => setMounted(true), []);
 
+  const filteredNotes = notes.filter(note => 
+    note.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    note.content.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   const isIndexPath = pathname === '/notes';
 
   return (

@@ -6,8 +6,9 @@ import dynamic from 'next/dynamic';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNotes } from '@/contexts/NotesContext';
 import { encryptNoteContent, decryptNoteContent } from '@/lib/crypto-client';
-import { Save, Shield, ShieldOff, Trash2, Eye, EyeOff } from 'lucide-react';
+import { Save, Shield, ShieldOff, Trash2, Eye, EyeOff, ChevronLeft } from 'lucide-react';
 import { useTheme } from 'next-themes';
+import Link from 'next/link';
 
 const MDEditor = dynamic(
   () => import('@uiw/react-md-editor').then((mod) => mod.default),
