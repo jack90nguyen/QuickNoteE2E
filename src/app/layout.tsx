@@ -12,6 +12,7 @@ const spaceMono = Space_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"),
   title: "Note E2E",
   description: "Secure markdown notes with E2E encryption",
   manifest: "/manifest.json",
