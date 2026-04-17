@@ -7,13 +7,17 @@ A secure, minimal markdown notes app with optional end-to-end encryption. Notes 
 ## Features
 
 - **Markdown notes** with a custom lightweight editor (headings H1–H4 rendered at real size in edit mode, bullet/checkbox lists, live preview).
+- **Synchronized Typography** — font-size (15px) and line-height (1.625) are perfectly matched between Edit and Preview modes for a seamless experience.
 - **Per-note encryption** toggle — each note is either plaintext or AES-GCM encrypted with your master key.
+- **Public Sharing** — generate shared links (`/shared/id`) for unencrypted notes with a dedicated public viewer and theme toggle.
+- **Performance Optimized** — "Lazy Loading" architecture: lists only load metadata and content snippets. Full content is fetched and decrypted only when needed.
+- **Pinning & Sorting** — pin important notes to the top and sort the rest by Title or Date (preferences saved to localStorage).
 - **Zero-knowledge design** — master key is derived in-browser from your password via PBKDF2, never sent to the server.
 - **Auth** — email/password with JWT in an HttpOnly cookie.
 - **Auto-save** with a 5-second debounce and visible saving / saved / unsaved indicators.
-- **Search** across titles and content (decrypted client-side).
-- **Tags** for organizing notes.
+- **Search** across titles.
 - **Dark / light theme**, mobile-friendly split-pane UI, PWA manifest.
+- **Developed by Jack90Nguyen** — minimal, secure, and personal.
 
 ## Tech stack
 

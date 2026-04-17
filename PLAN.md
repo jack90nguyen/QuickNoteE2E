@@ -337,24 +337,28 @@ Use Zod on client + server.
 
 ## 18. Development Phases
 
-## Phase 1 - MVP
-- Auth
-- Notes CRUD
-- Markdown editor
-- Optional encryption
-- Responsive UI
+## Phase 1 - MVP (Completed)
+- [x] Auth
+- [x] Notes CRUD
+- [x] Markdown editor
+- [x] Optional encryption
+- [x] Responsive UI
 
-## Phase 2
-- Tags
-- Search
-- Auto-save
-- Dark mode polish
+## Phase 2 (Completed)
+- [x] Search (Titles)
+- [x] Auto-save
+- [x] Dark mode polish
+- [x] Pin notes
+- [x] Sorting (Title/Date)
+- [x] Performance: Lazy Loading (Snippets)
 
 ## Phase 3
-- PWA offline
-- Export markdown files
-- Import notes
-- Backup/restore
+- [x] Public Sharing (unencrypted notes)
+- [x] Theme toggle for shared pages
+- [ ] PWA offline support
+- [ ] Export markdown files
+- [ ] Import notes
+- [ ] Backup/restore
 
 ---
 
@@ -396,10 +400,10 @@ Build in this order:
 - [x] 6. Notes APIs
 - [x] 7. Notes UI (Split-Pane Sidebar + Main Editor)
 - [x] 8. Encryption toggle
-- [x] 9. Search
+- [x] 9. Search (Title)
 - [x] 10. Auto-save (5s debounce)
-- [x] 11. Tags Management
-- [x] 12. Persistent Editor Settings (localStorage)
-- [x] 13. UI Customization (Space Mono Font, Seamless Dark Mode)
+- [x] 11. Pinning & Sorting
+- [x] 12. Public Sharing (Plain notes)
+- [x] 13. UI Customization & Performance (Lazy Loading)
 - [ ] 14. Deploy (Vercel / VPS)
 
