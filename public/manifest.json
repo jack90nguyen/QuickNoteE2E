@@ -1,6 +1,6 @@
 {
-  "name": "QuickNote E2E",
-  "short_name": "QuickNote",
+  "name": "Note E2E",
+  "short_name": "Note E2E",
   "description": "Secure markdown notes with E2E encryption",
   "start_url": "/notes",
   "display": "standalone",
@@ -8,22 +8,9 @@
   "theme_color": "#2563eb",
   "icons": [
     {
-      "src": "/favicon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any"
-    },
-    {
-      "src": "/favicon.svg",
-      "sizes": "192x192",
-      "type": "image/svg+xml",
-      "purpose": "maskable"
-    },
-    {
-      "src": "/favicon.svg",
-      "sizes": "512x512",
-      "type": "image/svg+xml",
-      "purpose": "maskable"
+      "src": "/favicon.png",
+      "sizes": "256x256",
+      "type": "image/png"
     }
   ]
 }

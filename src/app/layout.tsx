@@ -12,17 +12,17 @@ const spaceMono = Space_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "QuickNote",
+  title: "Note E2E",
   description: "Secure markdown notes with E2E encryption",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "QuickNote",
+    title: "Note E2E",
   },
   icons: {
-    icon: "/favicon.svg",
-    apple: "/favicon.svg",
+    icon: "/favicon.png",
+    apple: "/favicon.png",
   },
 };
 

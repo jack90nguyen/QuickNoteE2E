@@ -1,48 +1,53 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import dynamic from 'next/dynamic';
-import { useAuth } from '@/contexts/AuthContext';
-import { useNotes } from '@/contexts/NotesContext';
-import { encryptNoteContent, decryptNoteContent } from '@/lib/crypto-client';
-import { Save, Shield, ShieldOff, Trash2, Eye, EyeOff, ChevronLeft } from 'lucide-react';
-import { useTheme } from 'next-themes';
-import Link from 'next/link';
-
-const MDEditor = dynamic(
-  () => import('@uiw/react-md-editor').then((mod) => mod.default),
-  { ssr: false }
-);
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
+import { useNotes } from "@/contexts/NotesContext";
+import { encryptNoteContent, decryptNoteContent } from "@/lib/crypto-client";
+import {
+  Save,
+  Shield,
+  ShieldOff,
+  Trash2,
+  Eye,
+  EyeOff,
+  ChevronLeft,
+  Loader2,
+  Check,
+  Circle,
+} from "lucide-react";
+import Link from "next/link";
+import MinimalMarkdownEditor from "@/components/editor/MinimalMarkdownEditor";
 
 interface NoteEditorProps {
   noteId?: string;
 }
 
 export default function NoteEditor({ noteId }: NoteEditorProps) {
-  const [title, setTitle] = useState('');
-  const [content, setContent] = useState<string | undefined>('');
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState<string>("");
   const [isEncrypted, setIsEncrypted] = useState(false);
   const [tags, setTags] = useState<string[]>([]);
-  const [tagInput, setTagInput] = useState('');
+  const [tagInput, setTagInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(!!noteId);
-  const [error, setError] = useState('');
-  const [previewMode, setPreviewMode] = useState<'edit' | 'preview'>('edit');
+  const [error, setError] = useState("");
+  const [previewMode, setPreviewMode] = useState<"edit" | "preview">("edit");
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [isDirty, setIsDirty] = useState(false);
-  
+
   useEffect(() => {
-    const savedMode = localStorage.getItem('editorPreviewMode');
-    if (savedMode === 'edit' || savedMode === 'preview') {
+    const savedMode = localStorage.getItem("editorPreviewMode");
+    if (savedMode === "edit" || savedMode === "preview") {
       setPreviewMode(savedMode);
     }
   }, []);
 
   const togglePreviewMode = () => {
-    setPreviewMode(prev => {
-      const newMode = prev === 'edit' ? 'preview' : 'edit';
-      localStorage.setItem('editorPreviewMode', newMode);
+    setPreviewMode((prev) => {
+      const newMode = prev === "edit" ? "preview" : "edit";
+      localStorage.setItem("editorPreviewMode", newMode);
       return newMode;
     });
   };
@@ -50,14 +55,13 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
   const { masterKey } = useAuth();
   const { refreshNotes, deleteNote } = useNotes();
   const router = useRouter();
-  const { theme } = useTheme();
 
   useEffect(() => {
     if (noteId) {
       fetchNote();
     } else {
-      setTitle('');
-      setContent('');
+      setTitle("");
+      setContent("");
       setIsEncrypted(false);
       setTags([]);
       setIsDirty(false);
@@ -85,17 +89,21 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
     setIsFetching(true);
     try {
       const res = await fetch(`/api/notes/${noteId}`);
-      if (!res.ok) throw new Error('Failed to fetch note');
-      
+      if (!res.ok) throw new Error("Failed to fetch note");
+
       const data = await res.json();
       const note = data.note;
-      
+
       setTitle(note.title);
       setIsEncrypted(note.isEncrypted);
       setTags(note.tags || []);
-      
+
       if (note.isEncrypted && note.iv && masterKey) {
-        const decrypted = await decryptNoteContent(note.content, note.iv, masterKey);
+        const decrypted = await decryptNoteContent(
+          note.content,
+          note.iv,
+          masterKey,
+        );
         setContent(decrypted);
       } else {
         setContent(note.content);
@@ -103,7 +111,7 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
       // After fetching, it's not dirty
       setTimeout(() => setIsDirty(false), 0);
     } catch (err: any) {
-      setError(err.message || 'Error loading note');
+      setError(err.message || "Error loading note");
     } finally {
       setIsFetching(false);
     }
@@ -116,14 +124,15 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
     }
 
     setIsLoading(true);
-    setError('');
+    setError("");
 
     try {
-      let finalContent = content || '';
+      let finalContent = content || "";
       let iv: string | undefined = undefined;
 
       if (isEncrypted) {
-        if (!masterKey) throw new Error('Master key is missing. Cannot encrypt.');
+        if (!masterKey)
+          throw new Error("Master key is missing. Cannot encrypt.");
         const encryptedData = await encryptNoteContent(finalContent, masterKey);
         finalContent = encryptedData.ciphertext;
         iv = encryptedData.iv;
@@ -137,30 +146,30 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
         tags,
       };
 
-      const url = noteId ? `/api/notes/${noteId}` : '/api/notes';
-      const method = noteId ? 'PUT' : 'POST';
+      const url = noteId ? `/api/notes/${noteId}` : "/api/notes";
+      const method = noteId ? "PUT" : "POST";
 
       const res = await fetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
 
       if (!res.ok) {
         const errData = await res.json();
-        throw new Error(errData.error || 'Failed to save note');
+        throw new Error(errData.error || "Failed to save note");
       }
-      
+
       const result = await res.json();
       await refreshNotes();
       setIsDirty(false);
       setLastSaved(new Date());
-      
+
       if (!noteId) {
         router.push(`/notes/${result.note._id}`);
       }
     } catch (err: any) {
-      setError(err.message || 'Error saving note');
+      setError(err.message || "Error saving note");
     } finally {
       setIsLoading(false);
     }
@@ -169,84 +178,128 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
   const handleDelete = async () => {
     if (noteId) {
       await deleteNote(noteId);
-      router.push('/notes');
+      router.push("/notes");
     }
   };
 
   const handleAddTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && tagInput.trim()) {
+    if (e.key === "Enter" && tagInput.trim()) {
       e.preventDefault();
       if (!tags.includes(tagInput.trim())) {
         setTags([...tags, tagInput.trim()]);
       }
-      setTagInput('');
+      setTagInput("");
     }
   };
 
   const removeTag = (tagToRemove: string) => {
-    setTags(tags.filter(t => t !== tagToRemove));
+    setTags(tags.filter((t) => t !== tagToRemove));
   };
 
-  if (isFetching) return <div className="flex-1 flex items-center justify-center text-zinc-500">Loading note...</div>;
+  if (isFetching)
+    return (
+      <div className="flex-1 flex items-center justify-center text-zinc-500">
+        Loading note...
+      </div>
+    );
 
   return (
     <div className="flex flex-col h-full bg-white dark:bg-[#1e1e1e]">
       {/* Top Toolbar */}
       <div className="flex items-center justify-between px-6 py-3 border-b border-zinc-200 dark:border-zinc-800">
         <div className="flex items-center gap-2">
-          <Link 
-            href="/notes" 
-            className="md:hidden flex items-center gap-1 mr-2 px-2 py-1.5 text-xs font-bold text-blue-600 dark:text-blue-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-md transition"
+          <Link
+            href="/notes"
+            className="md:hidden flex items-center gap-1 mr-1 p-1.5 text-blue-600 dark:text-blue-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-md transition"
+            title="Back to notes"
+            aria-label="Back to notes"
           >
-            <ChevronLeft size={16} />
-            All Notes
+            <ChevronLeft size={18} />
           </Link>
 
           <button
             onClick={() => setIsEncrypted(!isEncrypted)}
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition ${
-              isEncrypted 
-                ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400' 
-                : 'text-zinc-500 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800'
+            className={`flex items-center gap-1.5 p-1.5 md:px-2.5 md:py-1.5 rounded-md text-xs font-medium transition ${
+              isEncrypted
+                ? "bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400"
+                : "text-zinc-500 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
             }`}
-            title="Toggle Encryption"
+            title={isEncrypted ? "Encrypted" : "Plain Text"}
+            aria-label={isEncrypted ? "Encrypted" : "Plain Text"}
           >
-            {isEncrypted ? <Shield size={14} /> : <ShieldOff size={14} />}
-            {isEncrypted ? 'Encrypted' : 'Plain Text'}
+            {isEncrypted ? <Shield size={16} /> : <ShieldOff size={16} />}
+            <span className="hidden md:inline">
+              {isEncrypted ? "Encrypted" : "Plain Text"}
+            </span>
           </button>
-          
-          <div className="text-[10px] text-zinc-400 font-mono ml-2">
+
+          <div className="flex items-center ml-2 text-[10px] text-zinc-400 font-mono">
             {isLoading ? (
-              <span className="animate-pulse">Saving...</span>
+              <>
+                <Loader2
+                  size={14}
+                  className="md:hidden animate-spin text-zinc-500"
+                  aria-label="Saving"
+                />
+                <span className="hidden md:inline animate-pulse">
+                  Saving...
+                </span>
+              </>
             ) : lastSaved ? (
-              <span>Last saved: {lastSaved.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>
+              <>
+                <Check
+                  size={14}
+                  className="md:hidden text-green-500"
+                  aria-label={`Saved at ${lastSaved.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`}
+                />
+                <span className="hidden md:inline">
+                  Last saved:{" "}
+                  {lastSaved.toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    second: "2-digit",
+                  })}
+                </span>
+              </>
             ) : isDirty ? (
-              <span className="text-amber-500/70">Unsaved changes</span>
+              <>
+                <Circle
+                  size={10}
+                  className="md:hidden text-amber-500 fill-amber-500"
+                  aria-label="Unsaved changes"
+                />
+                <span className="hidden md:inline text-amber-500/70">
+                  Unsaved changes
+                </span>
+              </>
             ) : null}
           </div>
-          
+
           {error && <span className="text-xs text-red-500 ml-2">{error}</span>}
         </div>
-        
+
         <div className="flex items-center gap-2 text-zinc-500 dark:text-zinc-400">
-          <button 
+          <button
             onClick={handleSave}
             disabled={isLoading}
-            className="flex items-center gap-1 px-3 py-1.5 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 transition text-blue-600 dark:text-blue-400 disabled:opacity-50 text-sm font-medium"
+            className="flex items-center gap-1 p-1.5 md:px-3 md:py-1.5 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 transition text-blue-600 dark:text-blue-400 disabled:opacity-50 text-sm font-medium"
             title="Save Note"
+            aria-label="Save Note"
           >
-            <Save size={16} /> Save
+            <Save size={18} className="md:hidden" />
+            <Save size={16} className="hidden md:inline" />
+            <span className="hidden md:inline">Save</span>
           </button>
           <div className="w-px h-4 bg-zinc-300 dark:bg-zinc-700 mx-1"></div>
-          <button 
+          <button
             onClick={togglePreviewMode}
-            className={`p-1.5 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 transition ${previewMode === 'preview' ? 'text-blue-500' : ''}`}
+            className={`p-1.5 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 transition ${previewMode === "preview" ? "text-blue-500" : ""}`}
             title="Toggle Preview"
           >
-            {previewMode === 'edit' ? <Eye size={18} /> : <EyeOff size={18} />}
+            {previewMode === "edit" ? <Eye size={18} /> : <EyeOff size={18} />}
           </button>
           {noteId && (
-            <button 
+            <button
               onClick={handleDelete}
               className="p-1.5 rounded-md hover:bg-zinc-100 hover:text-red-500 dark:hover:bg-zinc-800 transition"
               title="Delete Note"
@@ -269,15 +322,11 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
           />
         </div>
 
-        <div className="flex-1 overflow-hidden px-4" data-color-mode={theme === 'dark' ? 'dark' : 'light'}>
-          {/* We will apply CSS in globals.css to style .w-md-editor */}
-          <MDEditor
+        <div className="flex-1 overflow-hidden">
+          <MinimalMarkdownEditor
             value={content}
             onChange={setContent}
-            preview={previewMode}
-            height="100%"
-            className="w-full h-full seamless-editor"
-            visibleDragbar={false}
+            mode={previewMode}
           />
         </div>
       </div>
@@ -285,10 +334,18 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
       {/* Bottom Tags Bar */}
       <div className="px-6 py-3 border-t border-zinc-200 dark:border-zinc-800 flex items-center gap-2 overflow-x-auto bg-zinc-50 dark:bg-zinc-900/50">
         <span className="text-xs font-medium text-zinc-500">Tag:</span>
-        {tags.map(tag => (
-          <span key={tag} className="flex items-center gap-1 px-2 py-1 bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 rounded-md text-xs">
+        {tags.map((tag) => (
+          <span
+            key={tag}
+            className="flex items-center gap-1 px-2 py-1 bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 rounded-md text-xs"
+          >
             {tag}
-            <button onClick={() => removeTag(tag)} className="hover:text-red-500">&times;</button>
+            <button
+              onClick={() => removeTag(tag)}
+              className="hover:text-red-500"
+            >
+              &times;
+            </button>
           </span>
         ))}
         <input
