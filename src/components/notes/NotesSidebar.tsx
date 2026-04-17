@@ -41,8 +41,7 @@ export default function NotesSidebar() {
     const q = searchQuery.toLowerCase();
     const result = !q ? notes : notes.filter(
       (note) =>
-        note.title.toLowerCase().includes(q) ||
-        note.content.toLowerCase().includes(q)
+        note.title.toLowerCase().includes(q)
     );
     return result;
   }, [notes, searchQuery]);
