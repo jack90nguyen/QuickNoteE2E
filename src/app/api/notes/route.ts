@@ -14,7 +14,8 @@ export async function GET() {
     await connectToDatabase();
 
     const notes = await Note.find({ userId: session.userId })
-      .sort({ updatedAt: -1 })
+      .select('-content -iv')
+      .sort({ isPinned: -1, updatedAt: -1 })
       .lean();
 
     return NextResponse.json({ notes });

@@ -17,11 +17,19 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  
+  --font-size-editor: 15px;
+  --line-height-editor: 1.625;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
+}
+
+.markdown-body {
+  font-size: var(--font-size-editor);
+  line-height: var(--line-height-editor);
 }
 
 .minimal-md-editor[data-empty="true"]::before {

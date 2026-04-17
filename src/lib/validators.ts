@@ -32,9 +32,10 @@ export const loginApiSchema = z.object({
 export const noteUpsertSchema = z.object({
   title: z.string().min(1, 'Title is required').max(200, 'Title too long'),
   content: z.string().max(1_000_000, 'Content too large').default(''),
+  snippet: z.string().max(300).optional(),
   isEncrypted: z.boolean().default(false),
   iv: z.string().max(64).optional(),
-  tags: z.array(z.string().min(1).max(50)).max(20).default([]),
+  isPinned: z.boolean().default(false),
 });
 
 export const notePatchSchema = noteUpsertSchema.partial();

@@ -16,6 +16,7 @@ import {
   Loader2,
   Check,
   Circle,
+  Share2,
 } from "lucide-react";
 import Link from "next/link";
 import MinimalMarkdownEditor from "@/components/editor/MinimalMarkdownEditor";
@@ -28,14 +29,13 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState<string>("");
   const [isEncrypted, setIsEncrypted] = useState(false);
-  const [tags, setTags] = useState<string[]>([]);
-  const [tagInput, setTagInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(!!noteId);
   const [error, setError] = useState("");
   const [previewMode, setPreviewMode] = useState<"edit" | "preview">("edit");
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [isDirty, setIsDirty] = useState(false);
+  const [isCopied, setIsCopied] = useState(false);
 
   useEffect(() => {
     const savedMode = localStorage.getItem("editorPreviewMode");
@@ -63,7 +63,6 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
       setTitle("");
       setContent("");
       setIsEncrypted(false);
-      setTags([]);
       setIsDirty(false);
     }
   }, [noteId]);
@@ -72,7 +71,7 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
   useEffect(() => {
     if (isFetching) return;
     setIsDirty(true);
-  }, [title, content, isEncrypted, tags]);
+  }, [title, content, isEncrypted]);
 
   // Auto-save effect
   useEffect(() => {
@@ -83,7 +82,7 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
     }, 5000); // 5 seconds
 
     return () => clearTimeout(timer);
-  }, [isDirty, title, content, isEncrypted, tags, isFetching, isLoading]);
+  }, [isDirty, title, content, isEncrypted, isFetching, isLoading]);
 
   const fetchNote = async () => {
     setIsFetching(true);
@@ -96,7 +95,6 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
 
       setTitle(note.title);
       setIsEncrypted(note.isEncrypted);
-      setTags(note.tags || []);
 
       if (note.isEncrypted && note.iv && masterKey) {
         const decrypted = await decryptNoteContent(
@@ -141,9 +139,9 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
       const payload = {
         title,
         content: finalContent,
+        snippet: isEncrypted ? "" : (content || "").substring(0, 100).replace(/\n/g, " "),
         isEncrypted,
         iv,
-        tags,
       };
 
       const url = noteId ? `/api/notes/${noteId}` : "/api/notes";
@@ -165,10 +163,11 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
         _id: result.note._id,
         title: result.note.title,
         content: content || "",
+        snippet: result.note.snippet,
         isEncrypted: result.note.isEncrypted,
         iv: result.note.iv,
         updatedAt: result.note.updatedAt,
-        tags: result.note.tags || [],
+        isPinned: result.note.isPinned,
       });
       setIsDirty(false);
       setLastSaved(new Date());
@@ -190,18 +189,12 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
     }
   };
 
-  const handleAddTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" && tagInput.trim()) {
-      e.preventDefault();
-      if (!tags.includes(tagInput.trim())) {
-        setTags([...tags, tagInput.trim()]);
-      }
-      setTagInput("");
-    }
-  };
-
-  const removeTag = (tagToRemove: string) => {
-    setTags(tags.filter((t) => t !== tagToRemove));
+  const handleShare = () => {
+    if (!noteId) return;
+    const url = `${window.location.origin}/shared/${noteId}`;
+    navigator.clipboard.writeText(url);
+    setIsCopied(true);
+    setTimeout(() => setIsCopied(false), 3000);
   };
 
   if (isFetching)
@@ -298,6 +291,23 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
             <Save size={16} className="hidden md:inline" />
             <span className="hidden md:inline">Save</span>
           </button>
+
+          {noteId && !isEncrypted && (
+            <button
+              onClick={handleShare}
+              className={`flex items-center gap-1 p-1.5 md:px-3 md:py-1.5 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 transition text-sm font-medium ${
+                isCopied 
+                  ? 'text-green-600 dark:text-green-400' 
+                  : 'text-zinc-600 dark:text-zinc-400'
+              }`}
+              title="Share Link"
+            >
+              <Share2 size={18} className="md:hidden" />
+              <Share2 size={16} className="hidden md:inline" />
+              <span className="hidden md:inline">{isCopied ? 'Link Copied!' : 'Share'}</span>
+            </button>
+          )}
+
           <div className="w-px h-4 bg-zinc-300 dark:bg-zinc-700 mx-1"></div>
           <button
             onClick={togglePreviewMode}
@@ -338,33 +348,6 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
             mode={previewMode}
           />
         </div>
-      </div>
-
-      {/* Bottom Tags Bar */}
-      <div className="px-6 py-3 border-t border-zinc-200 dark:border-zinc-800 flex items-center gap-2 overflow-x-auto bg-zinc-50 dark:bg-zinc-900/50">
-        <span className="text-xs font-medium text-zinc-500">Tag:</span>
-        {tags.map((tag) => (
-          <span
-            key={tag}
-            className="flex items-center gap-1 px-2 py-1 bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 rounded-md text-xs"
-          >
-            {tag}
-            <button
-              onClick={() => removeTag(tag)}
-              className="hover:text-red-500"
-            >
-              &times;
-            </button>
-          </span>
-        ))}
-        <input
-          type="text"
-          value={tagInput}
-          onChange={(e) => setTagInput(e.target.value)}
-          onKeyDown={handleAddTag}
-          placeholder="Add tag..."
-          className="bg-transparent border-none focus:ring-0 text-xs text-zinc-900 dark:text-zinc-100 placeholder-zinc-500 p-0 w-24"
-        />
       </div>
     </div>
   );

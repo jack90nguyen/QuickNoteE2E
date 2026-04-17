@@ -4,27 +4,47 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useNotes } from '@/contexts/NotesContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { Lock, Search, SquarePen, LogOut, Sun, Moon } from 'lucide-react';
+import { 
+  Lock, 
+  Search, 
+  SquarePen, 
+  LogOut, 
+  Sun, 
+  Moon, 
+  Pin, 
+  PinOff,
+  Clock,
+  Type
+} from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useEffect, useMemo, useState } from 'react';
 
 export default function NotesSidebar() {
-  const { notes, isLoading, searchQuery, setSearchQuery } = useNotes();
+  const { 
+    notes, 
+    isLoading, 
+    searchQuery, 
+    setSearchQuery, 
+    sortBy, 
+    setSortBy, 
+    togglePin 
+  } = useNotes();
   const { user, logout } = useAuth();
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const [showSortOptions, setShowSortOptions] = useState(false);
 
   useEffect(() => setMounted(true), []);
 
   const filteredNotes = useMemo(() => {
     const q = searchQuery.toLowerCase();
-    if (!q) return notes;
-    return notes.filter(
+    const result = !q ? notes : notes.filter(
       (note) =>
         note.title.toLowerCase().includes(q) ||
         note.content.toLowerCase().includes(q)
     );
+    return result;
   }, [notes, searchQuery]);
 
   const isIndexPath = pathname === '/notes';
@@ -32,24 +52,55 @@ export default function NotesSidebar() {
   return (
     <div className={`${isIndexPath ? 'flex w-full' : 'hidden'} md:flex md:w-80 flex-shrink-0 flex-col h-full bg-[#f9f9f9] dark:bg-[#252525] border-r border-zinc-200 dark:border-zinc-800`}>
       {/* Top bar */}
-      <div className="p-4 flex items-center justify-between gap-2 border-b border-zinc-200 dark:border-zinc-800">
-        <div className="relative flex-1">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
-          <input
-            type="text"
-            placeholder="Search notes"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-3 py-1.5 bg-zinc-200 dark:bg-[#1e1e1e] border-none rounded-md text-sm text-zinc-900 dark:text-zinc-100 focus:ring-1 focus:ring-blue-500 placeholder-zinc-500"
-          />
+      <div className="p-4 flex flex-col gap-3 border-b border-zinc-200 dark:border-zinc-800">
+        <div className="flex items-center justify-between gap-2">
+          <div className="relative flex-1">
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
+            <input
+              type="text"
+              placeholder="Search notes"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-3 py-1.5 bg-zinc-200 dark:bg-[#1e1e1e] border-none rounded-md text-sm text-zinc-900 dark:text-zinc-100 focus:ring-1 focus:ring-blue-500 placeholder-zinc-500"
+            />
+          </div>
+          <Link 
+            href="/notes/new" 
+            className="p-1.5 text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 rounded-md hover:bg-zinc-200 dark:hover:bg-zinc-700 transition"
+            title="New Note"
+          >
+            <SquarePen size={20} />
+          </Link>
         </div>
-        <Link 
-          href="/notes/new" 
-          className="p-1.5 text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 rounded-md hover:bg-zinc-200 dark:hover:bg-zinc-700 transition"
-          title="New Note"
-        >
-          <SquarePen size={20} />
-        </Link>
+        
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowSortOptions(!showSortOptions)}
+            className="flex items-center gap-1.5 text-xs font-medium text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300 transition"
+          >
+            {sortBy === 'updatedAt' ? <Clock size={14} /> : <Type size={14} />}
+            Sort by {sortBy === 'updatedAt' ? 'Date' : 'Title'}
+          </button>
+          
+          {showSortOptions && (
+            <div className="flex gap-2 bg-zinc-200 dark:bg-zinc-800 p-1 rounded-md">
+              <button
+                onClick={() => { setSortBy('updatedAt'); setShowSortOptions(false); }}
+                className={`p-1 rounded ${sortBy === 'updatedAt' ? 'bg-white dark:bg-zinc-700 shadow-sm' : ''}`}
+                title="Sort by Date"
+              >
+                <Clock size={12} />
+              </button>
+              <button
+                onClick={() => { setSortBy('title'); setShowSortOptions(false); }}
+                className={`p-1 rounded ${sortBy === 'title' ? 'bg-white dark:bg-zinc-700 shadow-sm' : ''}`}
+                title="Sort by Title"
+              >
+                <Type size={12} />
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* List */}
@@ -63,25 +114,49 @@ export default function NotesSidebar() {
             {filteredNotes.map((note) => {
               const isActive = pathname === `/notes/${note._id}`;
               return (
-                <Link
-                  key={note._id}
-                  href={`/notes/${note._id}`}
-                  className={`p-4 border-b border-zinc-200 dark:border-zinc-800/50 hover:bg-zinc-200/50 dark:hover:bg-zinc-800/50 transition cursor-pointer ${
-                    isActive ? 'bg-zinc-200 dark:bg-[#323232]' : ''
-                  }`}
-                >
-                  <div className="flex justify-between items-start mb-1">
-                    <h3 className={`text-sm font-bold truncate pr-2 ${isActive ? 'text-zinc-900 dark:text-zinc-50' : 'text-zinc-700 dark:text-zinc-300'}`}>
-                      {note.title || "Untitled"}
-                    </h3>
-                    {note.isEncrypted && (
-                      <Lock size={14} className="text-amber-500 flex-shrink-0" />
+                <div key={note._id} className="relative group">
+                  <Link
+                    href={`/notes/${note._id}`}
+                    className={`block p-4 border-b border-zinc-200 dark:border-zinc-800/50 hover:bg-zinc-200/50 dark:hover:bg-zinc-800/50 transition cursor-pointer ${
+                      isActive ? 'bg-zinc-200 dark:bg-[#323232]' : ''
+                    }`}
+                  >
+                    <div className="flex justify-between items-start mb-1 pr-6">
+                      <h3 className={`text-sm font-bold truncate pr-2 ${isActive ? 'text-zinc-900 dark:text-zinc-50' : 'text-zinc-700 dark:text-zinc-300'}`}>
+                        {note.isPinned && <Pin size={12} className="inline-block mr-1 text-blue-500 fill-blue-500" />}
+                        {note.title || "Untitled"}
+                      </h3>
+                      {note.isEncrypted && (
+                        <Lock size={14} className="text-amber-500 flex-shrink-0" />
+                      )}
+                    </div>
+                    <div className="flex justify-end items-center mt-1 mb-1">
+                      {note.isEncrypted && (
+                        <span className="text-[10px] text-amber-500 font-mono flex items-center gap-1">
+                          <Lock size={10} /> ENCRYPTED
+                        </span>
+                      )}
+                    </div>
+                    {!note.isEncrypted && note.snippet && (
+                      <p className="text-xs text-zinc-500 dark:text-zinc-400 line-clamp-1">
+                        {note.snippet}
+                      </p>
                     )}
-                  </div>
-                  <p className="text-xs text-zinc-500 dark:text-zinc-400 line-clamp-2">
-                    {note.content || "No additional text"}
-                  </p>
-                </Link>
+                  </Link>
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      togglePin(note._id);
+                    }}
+                    className={`absolute right-3 top-4 p-1 rounded-md transition-opacity opacity-0 group-hover:opacity-100 ${
+                      note.isPinned ? 'opacity-100 text-blue-500' : 'text-zinc-400 hover:text-blue-500'
+                    }`}
+                    title={note.isPinned ? "Unpin" : "Pin"}
+                  >
+                    {note.isPinned ? <PinOff size={14} /> : <Pin size={14} />}
+                  </button>
+                </div>
               );
             })}
           </div>

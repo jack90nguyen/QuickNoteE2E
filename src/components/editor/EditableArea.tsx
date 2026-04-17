@@ -49,7 +49,7 @@ function buildLinesHtml(value: string): string {
     .map((line) => {
       const cls = classForLine(line);
       const body = line.length === 0 ? '<br>' : escapeHtml(line);
-      return `<div class="${cls}">${body}</div>`;
+      return `<div class="${cls}" style="line-height: var(--line-height-editor)">${body}</div>`;
     })
     .join('');
 }

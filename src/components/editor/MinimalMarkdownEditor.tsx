@@ -89,7 +89,7 @@ export default function MinimalMarkdownEditor({
             onKeyDown={handleKeyDown}
             readOnly={readOnly}
             placeholder={placeholder}
-            className="minimal-md-editor w-full h-full px-6 py-4 overflow-auto outline-none text-zinc-900 dark:text-zinc-100 text-[15px] leading-relaxed whitespace-pre-wrap break-words font-mono"
+            className="minimal-md-editor markdown-body w-full h-full px-6 py-4 overflow-auto outline-none text-zinc-900 dark:text-zinc-100 whitespace-pre-wrap break-words font-mono"
           />
         ) : (
           <Preview value={value} />
