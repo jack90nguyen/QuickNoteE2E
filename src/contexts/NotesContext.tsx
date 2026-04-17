@@ -1,6 +1,14 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  ReactNode,
+} from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { decryptNoteContent } from '@/lib/crypto-client';
 
@@ -38,12 +46,16 @@ export function NotesProvider({ children }: { children: ReactNode }) {
       const res = await fetch('/api/notes');
       if (!res.ok) throw new Error('Failed to fetch notes');
       const data = await res.json();
-      
+
       const decryptedNotes = await Promise.all(
         data.notes.map(async (note: Note) => {
           if (note.isEncrypted && note.iv && masterKey) {
             try {
-              const decryptedContent = await decryptNoteContent(note.content, note.iv, masterKey);
+              const decryptedContent = await decryptNoteContent(
+                note.content,
+                note.iv,
+                masterKey
+              );
               return { ...note, content: decryptedContent };
             } catch (err) {
               console.error('Failed to decrypt note', note._id);
@@ -53,7 +65,7 @@ export function NotesProvider({ children }: { children: ReactNode }) {
           return note;
         })
       );
-      
+
       setNotes(decryptedNotes);
     } catch (error) {
       console.error(error);
@@ -66,23 +78,31 @@ export function NotesProvider({ children }: { children: ReactNode }) {
     fetchNotes();
   }, [fetchNotes]);
 
-  const deleteNote = async (id: string) => {
+  const deleteNote = useCallback(async (id: string) => {
     if (!confirm('Are you sure you want to delete this note?')) return;
     try {
       const res = await fetch(`/api/notes/${id}`, { method: 'DELETE' });
       if (res.ok) {
-        setNotes(prev => prev.filter(n => n._id !== id));
+        setNotes((prev) => prev.filter((n) => n._id !== id));
       }
     } catch (error) {
       console.error('Failed to delete note', error);
     }
-  };
+  }, []);
 
-  return (
-    <NotesContext.Provider value={{ notes, isLoading, refreshNotes: fetchNotes, deleteNote, searchQuery, setSearchQuery }}>
-      {children}
-    </NotesContext.Provider>
+  const value = useMemo(
+    () => ({
+      notes,
+      isLoading,
+      refreshNotes: fetchNotes,
+      deleteNote,
+      searchQuery,
+      setSearchQuery,
+    }),
+    [notes, isLoading, fetchNotes, deleteNote, searchQuery]
   );
+
+  return <NotesContext.Provider value={value}>{children}</NotesContext.Provider>;
 }
 
 export function useNotes() {

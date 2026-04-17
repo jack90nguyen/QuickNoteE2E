@@ -1,7 +1,14 @@
 import jwt from 'jsonwebtoken';
 import { cookies } from 'next/headers';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-key-change-in-prod-quicknote';
+const JWT_SECRET = (() => {
+  const fromEnv = process.env.JWT_SECRET;
+  if (fromEnv && fromEnv.length > 0) return fromEnv;
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('JWT_SECRET environment variable is required in production.');
+  }
+  return 'dev-only-fallback-secret-do-not-use-in-prod';
+})();
 
 export function signToken(payload: object) {
   return jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });

@@ -295,6 +295,7 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
             onClick={togglePreviewMode}
             className={`p-1.5 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 transition ${previewMode === "preview" ? "text-blue-500" : ""}`}
             title="Toggle Preview"
+            aria-label="Toggle preview mode"
           >
             {previewMode === "edit" ? <Eye size={18} /> : <EyeOff size={18} />}
           </button>

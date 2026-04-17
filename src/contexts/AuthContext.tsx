@@ -1,6 +1,14 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  ReactNode,
+} from 'react';
 import { useRouter } from 'next/navigation';
 
 interface User {
@@ -28,14 +36,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
 
   useEffect(() => {
-    // Check session on load
     const checkSession = async () => {
       try {
         const res = await fetch('/api/auth/me');
         if (res.ok) {
           const data = await res.json();
           setUser(data.user);
-          // Try to get masterKey from sessionStorage
           const storedKey = sessionStorage.getItem('masterKey');
           if (storedKey) {
             setMasterKey(storedKey);
@@ -50,25 +56,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     checkSession();
   }, []);
 
-  const login = (newUser: User, newMasterKey: string) => {
+  const login = useCallback((newUser: User, newMasterKey: string) => {
     setUser(newUser);
     setMasterKey(newMasterKey);
     sessionStorage.setItem('masterKey', newMasterKey);
-  };
+  }, []);
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     await fetch('/api/auth/logout', { method: 'POST' });
     setUser(null);
     setMasterKey(null);
     sessionStorage.removeItem('masterKey');
     router.push('/login');
-  };
+  }, [router]);
 
-  return (
-    <AuthContext.Provider value={{ user, masterKey, isLoading, login, logout }}>
-      {children}
-    </AuthContext.Provider>
+  const value = useMemo(
+    () => ({ user, masterKey, isLoading, login, logout }),
+    [user, masterKey, isLoading, login, logout]
   );
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {

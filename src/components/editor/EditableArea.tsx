@@ -133,6 +133,7 @@ const EditableArea = forwardRef<EditableAreaHandle, Props>(function EditableArea
   ref
 ) {
   const rootRef = useRef<HTMLDivElement>(null);
+  const lastEmittedRef = useRef<string>(value);
 
   useImperativeHandle(ref, () => ({
     getValue() {
@@ -161,34 +162,46 @@ const EditableArea = forwardRef<EditableAreaHandle, Props>(function EditableArea
   useLayoutEffect(() => {
     if (rootRef.current && rootRef.current.innerHTML === '') {
       rootRef.current.innerHTML = buildLinesHtml(value);
+      lastEmittedRef.current = value;
     }
   }, []);
 
   useEffect(() => {
     const root = rootRef.current;
     if (!root) return;
-    if (getValueFromDom(root) !== value) {
-      root.innerHTML = buildLinesHtml(value);
+    if (value === lastEmittedRef.current) return;
+    if (getValueFromDom(root) === value) {
+      lastEmittedRef.current = value;
+      return;
     }
+    root.innerHTML = buildLinesHtml(value);
+    lastEmittedRef.current = value;
   }, [value]);
 
-  const reclassifyLines = () => {
+  const reclassifyCurrentLine = () => {
     const root = rootRef.current;
     if (!root) return;
-    for (const child of Array.from(root.children)) {
-      if (child instanceof HTMLElement) {
-        const cls = classForLine(child.textContent ?? '');
-        if (child.className !== cls) child.className = cls;
-      }
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0) return;
+    let node: Node | null = sel.anchorNode;
+    while (node && node.parentNode !== root) {
+      node = node.parentNode;
+    }
+    if (node instanceof HTMLElement) {
+      const cls = classForLine(node.textContent ?? '');
+      if (node.className !== cls) node.className = cls;
     }
   };
 
   const handleInput = () => {
     const root = rootRef.current;
     if (!root) return;
-    reclassifyLines();
+    reclassifyCurrentLine();
     const next = getValueFromDom(root);
-    if (next !== value) onChange(next);
+    if (next !== value) {
+      lastEmittedRef.current = next;
+      onChange(next);
+    }
   };
 
   const handlePaste = (e: React.ClipboardEvent<HTMLDivElement>) => {

@@ -26,7 +26,8 @@ export async function GET() {
         masterKeyIv: user.masterKeyIv
       } 
     });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
+  } catch (error) {
+    console.error('GET /api/auth/me failed', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

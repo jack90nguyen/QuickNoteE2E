@@ -6,7 +6,7 @@ import { useNotes } from '@/contexts/NotesContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Lock, Search, SquarePen, LogOut, Sun, Moon } from 'lucide-react';
 import { useTheme } from 'next-themes';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 export default function NotesSidebar() {
   const { notes, isLoading, searchQuery, setSearchQuery } = useNotes();
@@ -17,10 +17,15 @@ export default function NotesSidebar() {
 
   useEffect(() => setMounted(true), []);
 
-  const filteredNotes = notes.filter(note => 
-    note.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    note.content.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredNotes = useMemo(() => {
+    const q = searchQuery.toLowerCase();
+    if (!q) return notes;
+    return notes.filter(
+      (note) =>
+        note.title.toLowerCase().includes(q) ||
+        note.content.toLowerCase().includes(q)
+    );
+  }, [notes, searchQuery]);
 
   const isIndexPath = pathname === '/notes';
 

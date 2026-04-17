@@ -21,8 +21,20 @@ export const metadata: Metadata = {
     title: "Note E2E",
   },
   icons: {
-    icon: "/favicon.png",
-    apple: "/favicon.png",
+    icon: "/favicon-256.png",
+    apple: "/favicon-256.png",
+  },
+  openGraph: {
+    title: "Note E2E",
+    description: "Secure markdown notes with E2E encryption",
+    images: [{ url: "/cover.jpg" }],
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Note E2E",
+    description: "Secure markdown notes with E2E encryption",
+    images: ["/cover.jpg"],
   },
 };
 

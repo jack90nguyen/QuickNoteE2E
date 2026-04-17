@@ -13,7 +13,7 @@ export interface INote extends Document {
 
 const NoteSchema: Schema = new Schema(
   {
-    userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    userId: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
     title: { type: String, required: true },
     content: { type: String, required: false, default: '' },
     isEncrypted: { type: Boolean, required: true, default: false },
@@ -22,5 +22,7 @@ const NoteSchema: Schema = new Schema(
   },
   { timestamps: true }
 );
+
+NoteSchema.index({ userId: 1, updatedAt: -1 });
 
 export default mongoose.models.Note || mongoose.model<INote>('Note', NoteSchema);
