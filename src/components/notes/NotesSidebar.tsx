@@ -26,8 +26,7 @@ export default function NotesSidebar() {
     searchQuery, 
     setSearchQuery, 
     sortBy, 
-    setSortBy, 
-    togglePin 
+    setSortBy
   } = useNotes();
   const { user, logout } = useAuth();
   const pathname = usePathname();
