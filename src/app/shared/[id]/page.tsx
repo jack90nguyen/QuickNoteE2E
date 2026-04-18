@@ -66,8 +66,13 @@ export default function SharedNotePage() {
   return (
     <div className="min-h-screen bg-white dark:bg-[#0a0a0a] text-zinc-900 dark:text-zinc-100 flex flex-col">
       <header className="border-b border-zinc-200 dark:border-zinc-800 p-6 max-w-4xl w-full mx-auto">
-        <div className="flex justify-between items-start mb-4">
-          <h1 className="text-3xl font-bold">{note.title}</h1>
+        <h1 className="text-3xl font-bold mb-4">{note.title}</h1>
+
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-1 text-xs text-zinc-500 dark:text-zinc-400 font-mono">
+            <Calendar size={14} />
+            <span>Updated: {new Date(note.updatedAt).toLocaleDateString()}</span>
+          </div>
           <div className="flex items-center gap-2">
             {mounted && (
               <button
@@ -81,13 +86,6 @@ export default function SharedNotePage() {
             <Link href="/" className="text-sm font-medium text-blue-500 border border-blue-500/30 px-3 py-2 rounded-md hover:bg-blue-500/10 transition">
               Create your own
             </Link>
-          </div>
-        </div>
-        
-        <div className="flex flex-wrap items-center gap-4 text-xs text-zinc-500 dark:text-zinc-400 font-mono">
-          <div className="flex items-center gap-1">
-            <Calendar size={14} />
-            <span>Updated: {new Date(note.updatedAt).toLocaleDateString()}</span>
           </div>
         </div>
       </header>
