@@ -92,7 +92,7 @@ export default function MinimalMarkdownEditor({
             className="minimal-md-editor markdown-body w-full h-full px-6 py-4 overflow-auto outline-none text-zinc-900 dark:text-zinc-100 whitespace-pre-wrap break-words font-mono"
           />
         ) : (
-          <Preview value={value} />
+          <Preview value={value} onChange={onChange} interactive={!readOnly} />
         )}
       </div>
     </div>
