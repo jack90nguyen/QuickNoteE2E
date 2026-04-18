@@ -115,7 +115,7 @@ export default function NotesSidebar() {
                 <div key={note._id} className="relative group">
                   <Link
                     href={`/notes/${note._id}`}
-                    className={`block p-4 border-b border-zinc-200 dark:border-zinc-800/50 hover:bg-zinc-200/50 dark:hover:bg-zinc-800/50 transition cursor-pointer ${
+                    className={`block p-4 border-b border-zinc-200 dark:border-zinc-800/50 hover:bg-zinc-200/50 dark:hover:bg-zinc-800/50 active:bg-zinc-300 dark:active:bg-[#3a3a3a] active:scale-[0.98] transition-all duration-150 touch-manipulation [-webkit-tap-highlight-color:transparent] cursor-pointer ${
                       isActive ? 'bg-zinc-200 dark:bg-[#323232]' : ''
                     }`}
                   >

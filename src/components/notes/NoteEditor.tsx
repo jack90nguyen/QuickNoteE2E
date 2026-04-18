@@ -204,13 +204,20 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
 
   if (isFetching)
     return (
-      <div className="flex-1 flex items-center justify-center text-zinc-500">
-        Loading note...
+      <div
+        className="flex-1 flex flex-col gap-4 p-6 note-enter md:animate-none"
+        aria-busy="true"
+        aria-label="Loading note"
+      >
+        <div className="h-6 w-2/3 rounded bg-zinc-200 dark:bg-zinc-800 animate-pulse" />
+        <div className="h-4 w-full rounded bg-zinc-200 dark:bg-zinc-800 animate-pulse" />
+        <div className="h-4 w-11/12 rounded bg-zinc-200 dark:bg-zinc-800 animate-pulse" />
+        <div className="h-4 w-3/4 rounded bg-zinc-200 dark:bg-zinc-800 animate-pulse" />
       </div>
     );
 
   return (
-    <div className="flex flex-col h-full bg-white dark:bg-[#1e1e1e]">
+    <div className="flex flex-col h-full bg-white dark:bg-[#1e1e1e] note-enter md:animate-none">
       {/* Top Toolbar */}
       <div className="flex items-center justify-between px-6 py-3 border-b border-zinc-200 dark:border-zinc-800">
         <div className="flex items-center gap-2">

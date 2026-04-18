@@ -48,3 +48,14 @@ body {
   min-height: 1.6em;
 }
 
+@keyframes slideInRight {
+  from { transform: translateX(24px); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+.note-enter {
+  animation: slideInRight 220ms ease-out both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .note-enter { animation: none; }
+}
+
