@@ -125,36 +125,22 @@ export default function NotesSidebar() {
                         {note.isPinned && <Pin size={12} className="inline-block mr-1 text-blue-500 fill-blue-500" />}
                         {note.title || "Untitled"}
                       </h3>
-                      {note.isEncrypted && (
-                        <Lock size={14} className="text-amber-500 flex-shrink-0" />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      {note.isEncrypted ? (
+                        <div className="flex items-center gap-1.5 text-[11px] text-amber-600 dark:text-amber-500 font-medium">
+                          <Lock size={12} />
+                          <span>Encrypted Note</span>
+                        </div>
+                      ) : note.snippet ? (
+                        <p className="text-xs text-zinc-500 dark:text-zinc-400 line-clamp-1">
+                          {note.snippet}
+                        </p>
+                      ) : (
+                        <p className="text-xs text-zinc-400 italic">No preview available</p>
                       )}
                     </div>
-                    <div className="flex justify-end items-center mt-1 mb-1">
-                      {note.isEncrypted && (
-                        <span className="text-[10px] text-amber-500 font-mono flex items-center gap-1">
-                          <Lock size={10} /> ENCRYPTED
-                        </span>
-                      )}
-                    </div>
-                    {!note.isEncrypted && note.snippet && (
-                      <p className="text-xs text-zinc-500 dark:text-zinc-400 line-clamp-1">
-                        {note.snippet}
-                      </p>
-                    )}
                   </Link>
-                  <button
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      togglePin(note._id);
-                    }}
-                    className={`absolute right-3 top-4 p-1 rounded-md transition-opacity opacity-0 group-hover:opacity-100 ${
-                      note.isPinned ? 'opacity-100 text-blue-500' : 'text-zinc-400 hover:text-blue-500'
-                    }`}
-                    title={note.isPinned ? "Unpin" : "Pin"}
-                  >
-                    {note.isPinned ? <PinOff size={14} /> : <Pin size={14} />}
-                  </button>
                 </div>
               );
             })}

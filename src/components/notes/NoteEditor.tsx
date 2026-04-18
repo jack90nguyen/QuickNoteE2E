@@ -17,6 +17,7 @@ import {
   Check,
   Circle,
   Share2,
+  Pin,
 } from "lucide-react";
 import Link from "next/link";
 import MinimalMarkdownEditor from "@/components/editor/MinimalMarkdownEditor";
@@ -29,6 +30,7 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState<string>("");
   const [isEncrypted, setIsEncrypted] = useState(false);
+  const [isPinned, setIsPinned] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(!!noteId);
   const [error, setError] = useState("");
@@ -63,6 +65,7 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
       setTitle("");
       setContent("");
       setIsEncrypted(false);
+      setIsPinned(false);
       setIsDirty(false);
     }
   }, [noteId]);
@@ -71,7 +74,7 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
   useEffect(() => {
     if (isFetching) return;
     setIsDirty(true);
-  }, [title, content, isEncrypted]);
+  }, [title, content, isEncrypted, isPinned]);
 
   // Auto-save effect
   useEffect(() => {
@@ -95,6 +98,7 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
 
       setTitle(note.title);
       setIsEncrypted(note.isEncrypted);
+      setIsPinned(note.isPinned || false);
 
       if (note.isEncrypted && note.iv && masterKey) {
         const decrypted = await decryptNoteContent(
@@ -141,6 +145,7 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
         content: finalContent,
         snippet: isEncrypted ? "" : (content || "").substring(0, 100).replace(/\n/g, " "),
         isEncrypted,
+        isPinned,
         iv,
       };
 
@@ -307,6 +312,20 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
               <span className="hidden md:inline">{isCopied ? 'Link Copied!' : 'Share'}</span>
             </button>
           )}
+
+          <button
+            onClick={() => setIsPinned(!isPinned)}
+            className={`flex items-center gap-1 p-1.5 md:px-3 md:py-1.5 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 transition text-sm font-medium ${
+              isPinned 
+                ? 'text-blue-600 dark:text-blue-400' 
+                : 'text-zinc-600 dark:text-zinc-400'
+            }`}
+            title={isPinned ? "Unpin Note" : "Pin Note"}
+          >
+            <Pin size={18} className={`md:hidden ${isPinned ? 'fill-blue-600 dark:fill-blue-400' : ''}`} />
+            <Pin size={16} className={`hidden md:inline ${isPinned ? 'fill-blue-600 dark:fill-blue-400' : ''}`} />
+            <span className="hidden md:inline">{isPinned ? 'Pinned' : 'Pin'}</span>
+          </button>
 
           <div className="w-px h-4 bg-zinc-300 dark:bg-zinc-700 mx-1"></div>
           <button

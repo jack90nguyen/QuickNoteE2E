@@ -31,7 +31,6 @@ interface NotesContextType {
   refreshNotes: () => Promise<void>;
   upsertNote: (note: Note) => void;
   deleteNote: (id: string) => Promise<void>;
-  togglePin: (id: string) => Promise<void>;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
   sortBy: SortBy;
@@ -120,35 +119,6 @@ export function NotesProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const togglePin = useCallback(async (id: string) => {
-    const note = notes.find(n => n._id === id);
-    if (!note) return;
-
-    const newPinnedStatus = !note.isPinned;
-    
-    // Optimistic update
-    setNotes(prev => {
-      const updated = prev.map(n => n._id === id ? { ...n, isPinned: newPinnedStatus } : n);
-      return sortNotes(updated, sortBy);
-    });
-
-    try {
-      const res = await fetch(`/api/notes/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ isPinned: newPinnedStatus }),
-      });
-      if (!res.ok) throw new Error('Failed to toggle pin');
-    } catch (error) {
-      console.error('Failed to toggle pin', error);
-      // Revert on error
-      setNotes(prev => {
-        const reverted = prev.map(n => n._id === id ? { ...n, isPinned: !newPinnedStatus } : n);
-        return sortNotes(reverted, sortBy);
-      });
-    }
-  }, [notes, sortBy, sortNotes]);
-
   const value = useMemo(
     () => ({
       notes,
@@ -156,13 +126,12 @@ export function NotesProvider({ children }: { children: ReactNode }) {
       refreshNotes: fetchNotes,
       upsertNote,
       deleteNote,
-      togglePin,
       searchQuery,
       setSearchQuery,
       sortBy,
       setSortBy: handleSetSortBy,
     }),
-    [notes, isLoading, fetchNotes, upsertNote, deleteNote, togglePin, searchQuery, sortBy, handleSetSortBy]
+    [notes, isLoading, fetchNotes, upsertNote, deleteNote, searchQuery, sortBy, handleSetSortBy]
   );
 
   return <NotesContext.Provider value={value}>{children}</NotesContext.Provider>;
