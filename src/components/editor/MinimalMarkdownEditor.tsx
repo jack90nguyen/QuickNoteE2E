@@ -16,13 +16,21 @@ interface MinimalMarkdownEditorProps {
   readOnly?: boolean;
 }
 
-const PREFIX_MAP: Record<ToolbarAction, string> = {
+const PREFIX_MAP: Partial<Record<ToolbarAction, string>> = {
   h1: '# ',
   h2: '## ',
   h3: '### ',
   h4: '#### ',
   bullet: '- ',
   check: '- [ ] ',
+  quote: '> ',
+};
+
+const WRAP_MAP: Partial<Record<ToolbarAction, { before: string; after: string; placeholder: string }>> = {
+  bold: { before: '**', after: '**', placeholder: 'bold text' },
+  italic: { before: '*', after: '*', placeholder: 'italic text' },
+  code: { before: '\n```\n', after: '\n```\n', placeholder: 'code' },
+  link: { before: '[', after: '](url)', placeholder: 'link text' },
 };
 
 export default function MinimalMarkdownEditor({
@@ -51,11 +59,18 @@ export default function MinimalMarkdownEditor({
     const handle = editorRef.current;
     if (!handle) return;
     const { start, end } = handle.getSelection();
-    const result = insertLinePrefix(
-      { value: handle.getValue(), selectionStart: start, selectionEnd: end },
-      PREFIX_MAP[action]
-    );
-    applyAndRestore(result);
+    const input = { value: handle.getValue(), selectionStart: start, selectionEnd: end };
+
+    const prefix = PREFIX_MAP[action];
+    if (prefix !== undefined) {
+      applyAndRestore(insertLinePrefix(input, prefix));
+      return;
+    }
+
+    const wrap = WRAP_MAP[action];
+    if (wrap) {
+      applyAndRestore(wrapSelection(input, wrap.before, wrap.after, wrap.placeholder));
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
