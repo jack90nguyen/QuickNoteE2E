@@ -17,8 +17,11 @@
 1. Analyze request  
 2. Load minimal context (via Router)  
 3. Propose plan (if needed): -> save plan `*PLAN.md`
-4. Implement changes -> test build
-5. Verify impact (no break, no overwrite)
+4. Implement changes
+5. Run build / type-check / lint / tests (when available)
+6. Fix detected issues
+7. Verify impact (no break, no overwrite)
+8. Report completion only after successful verification
 
 ## 4. Coding Conventions
 
@@ -54,3 +57,10 @@
 - State:
   - What changed
   - Why (brief)
+  - Build / check result
+- Never claim completion before build/check passes
+- If build fails:
+  - Do not mark task complete
+  - Show error summary
+  - Continue fixing if within scope
+
