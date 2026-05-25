@@ -1,7 +1,7 @@
 import Cocoa
 import WebKit
 
-private let appURL = URL(string: "https://note.hbcommerce.co")!
+private let appURL = URL(string: "https://app.notota.com")!
 
 final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKUIDelegate {
     private var window: NSWindow!
