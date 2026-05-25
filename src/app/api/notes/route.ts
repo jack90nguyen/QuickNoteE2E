@@ -15,7 +15,8 @@ export async function GET() {
 
     const notes = await Note.find({ userId: session.userId })
       .select('-content -iv')
-      .sort({ isPinned: -1, updatedAt: -1 })
+      .collation({ locale: 'en', strength: 2 })
+      .sort({ isPinned: -1, title: 1 })
       .lean();
 
     return NextResponse.json({ notes });

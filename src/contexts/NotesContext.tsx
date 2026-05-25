@@ -43,7 +43,7 @@ export function NotesProvider({ children }: { children: ReactNode }) {
   const [notes, setNotes] = useState<Note[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [sortBy, setSortBy] = useState<SortBy>('updatedAt');
+  const [sortBy, setSortBy] = useState<SortBy>('title');
   const { masterKey, user } = useAuth();
 
   // Load sort preference
