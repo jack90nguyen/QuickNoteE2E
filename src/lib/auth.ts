@@ -1,5 +1,7 @@
 import jwt from 'jsonwebtoken';
 import { cookies } from 'next/headers';
+import connectToDatabase from '@/lib/db';
+import User from '@/models/User';
 
 const JWT_SECRET = (() => {
   const fromEnv = process.env.JWT_SECRET;
@@ -10,7 +12,12 @@ const JWT_SECRET = (() => {
   return 'dev-only-fallback-secret-do-not-use-in-prod';
 })();
 
-export function signToken(payload: object, remember: boolean = false) {
+export interface SessionPayload {
+  userId: string;
+  tokenVersion: number;
+}
+
+export function signToken(payload: SessionPayload, remember: boolean = false) {
   return jwt.sign(payload, JWT_SECRET, {
     expiresIn: remember ? '365d' : '7d',
   });
@@ -19,12 +26,12 @@ export function signToken(payload: object, remember: boolean = false) {
 export function verifyToken(token: string) {
   try {
     return jwt.verify(token, JWT_SECRET);
-  } catch (error) {
+  } catch {
     return null;
   }
 }
 
-export async function getUserFromSession() {
+export async function getUserFromSession(): Promise<SessionPayload | null> {
   const cookieStore = await cookies();
   const token = cookieStore.get('auth-token')?.value;
 
@@ -32,12 +39,18 @@ export async function getUserFromSession() {
     return null;
   }
 
-  const decoded = verifyToken(token) as { userId: string } | null;
-  if (!decoded) {
+  const decoded = verifyToken(token) as Partial<SessionPayload> | null;
+  if (!decoded?.userId || typeof decoded.tokenVersion !== 'number') {
     return null;
   }
 
-  return decoded;
+  await connectToDatabase();
+  const user = await User.findById(decoded.userId).select('tokenVersion').lean<{ tokenVersion: number } | null>();
+  if (!user || user.tokenVersion !== decoded.tokenVersion) {
+    return null;
+  }
+
+  return { userId: decoded.userId, tokenVersion: decoded.tokenVersion };
 }
 
 export async function setAuthCookie(token: string, remember: boolean = false) {

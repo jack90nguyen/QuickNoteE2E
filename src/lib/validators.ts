@@ -29,6 +29,14 @@ export const loginApiSchema = z.object({
   remember: z.boolean().optional().default(false),
 });
 
+export const changePasswordApiSchema = z.object({
+  currentPassword: z.string().min(8, 'Password must be at least 8 characters'),
+  newPassword: z.string().min(8, 'Password must be at least 8 characters'),
+  kdfSalt: z.string().min(1),
+  encryptedMasterKey: z.string().min(1),
+  masterKeyIv: z.string().min(1),
+});
+
 export const noteUpsertSchema = z.object({
   title: z.string().min(1, 'Title is required').max(200, 'Title too long'),
   content: z.string().max(1_000_000, 'Content too large').default(''),

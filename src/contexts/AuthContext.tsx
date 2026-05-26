@@ -25,6 +25,7 @@ interface AuthContextType {
   isLoading: boolean;
   login: (user: User, masterKey: string) => void;
   logout: () => void;
+  updateUser: (patch: Partial<User>) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -76,9 +77,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     router.push('/login');
   }, [router]);
 
+  const updateUser = useCallback((patch: Partial<User>) => {
+    setUser((prev) => (prev ? { ...prev, ...patch } : prev));
+  }, []);
+
   const value = useMemo(
-    () => ({ user, masterKey, isLoading, login, logout }),
-    [user, masterKey, isLoading, login, logout]
+    () => ({ user, masterKey, isLoading, login, logout, updateUser }),
+    [user, masterKey, isLoading, login, logout, updateUser]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useEffect, useMemo, useState } from 'react';
+import AccountModal from '@/components/auth/AccountModal';
 
 export default function NotesSidebar() {
   const { 
@@ -33,6 +34,7 @@ export default function NotesSidebar() {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [showSortOptions, setShowSortOptions] = useState(false);
+  const [showAccount, setShowAccount] = useState(false);
 
   useEffect(() => setMounted(true), []);
 
@@ -149,9 +151,14 @@ export default function NotesSidebar() {
 
       {/* User Area Bottom */}
       <div className="p-4 border-t border-zinc-200 dark:border-zinc-800 flex justify-between items-center bg-zinc-100 dark:bg-[#1e1e1e]">
-        <div className="text-xs font-medium text-zinc-600 dark:text-zinc-400 truncate pr-2">
+        <button
+          type="button"
+          onClick={() => setShowAccount(true)}
+          className="text-xs font-medium text-zinc-600 dark:text-zinc-400 truncate pr-2 hover:text-zinc-900 dark:hover:text-zinc-100 transition text-left"
+          title="Tài khoản"
+        >
           {user?.email}
-        </div>
+        </button>
         <div className="flex items-center gap-2">
           {mounted && (
             <button
@@ -162,7 +169,7 @@ export default function NotesSidebar() {
               {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
             </button>
           )}
-          <button 
+          <button
             onClick={logout}
             className="p-1.5 text-zinc-500 hover:text-red-500 rounded-md transition"
             title="Logout"
@@ -171,6 +178,8 @@ export default function NotesSidebar() {
           </button>
         </div>
       </div>
+
+      <AccountModal open={showAccount} onClose={() => setShowAccount(false)} />
     </div>
   );
 }
