@@ -46,7 +46,9 @@ export const noteUpsertSchema = z.object({
   isPinned: z.boolean().default(false),
 });
 
-export const notePatchSchema = noteUpsertSchema.partial();
+export const notePatchSchema = noteUpsertSchema.partial().extend({
+  expectedUpdatedAt: z.string().datetime().optional(),
+});
 
 export type LoginInput = z.infer<typeof loginSchema>;
 export type RegisterInput = z.infer<typeof registerSchema>;

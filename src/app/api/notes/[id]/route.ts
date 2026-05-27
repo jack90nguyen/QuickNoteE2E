@@ -50,7 +50,15 @@ export async function PUT(req: Request, props: { params: Promise<{ id: string }>
       return NextResponse.json({ error: 'Note not found' }, { status: 404 });
     }
 
-    Object.assign(note, parsed.data);
+    const { expectedUpdatedAt, ...updates } = parsed.data;
+    if (
+      expectedUpdatedAt &&
+      new Date(note.updatedAt).getTime() !== new Date(expectedUpdatedAt).getTime()
+    ) {
+      return NextResponse.json({ error: 'conflict', note }, { status: 409 });
+    }
+
+    Object.assign(note, updates);
     await note.save();
 
     return NextResponse.json({ note });

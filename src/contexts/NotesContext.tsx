@@ -76,9 +76,9 @@ export function NotesProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  const fetchNotes = useCallback(async () => {
+  const fetchNotes = useCallback(async (silent = false) => {
     if (!user) return;
-    setIsLoading(true);
+    if (!silent) setIsLoading(true);
     try {
       const res = await fetch('/api/notes');
       if (!res.ok) throw new Error('Failed to fetch notes');
@@ -87,13 +87,34 @@ export function NotesProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error(error);
     } finally {
-      setIsLoading(false);
+      if (!silent) setIsLoading(false);
     }
   }, [user, sortBy, sortNotes]);
 
   useEffect(() => {
     fetchNotes();
   }, [fetchNotes]);
+
+  // Poll sidebar every 10s + refetch on tab focus
+  useEffect(() => {
+    if (!user) return;
+
+    const tick = () => {
+      if (document.hidden) return;
+      fetchNotes(true);
+    };
+
+    const interval = setInterval(tick, 5_000);
+    const onVisible = () => {
+      if (!document.hidden) fetchNotes(true);
+    };
+    document.addEventListener('visibilitychange', onVisible);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
+  }, [user, fetchNotes]);
 
   // Re-sort when sortBy changes without re-fetching
   useEffect(() => {
