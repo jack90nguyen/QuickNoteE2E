@@ -6,6 +6,7 @@ export interface IUser extends Document {
   kdfSalt: string;
   encryptedMasterKey: string;
   masterKeyIv: string;
+  tokenVersion: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -17,6 +18,7 @@ const UserSchema: Schema = new Schema(
     kdfSalt: { type: String, required: true },
     encryptedMasterKey: { type: String, required: true },
     masterKeyIv: { type: String, required: true },
+    tokenVersion: { type: Number, required: true, default: 0 },
   },
   { timestamps: true }
 );

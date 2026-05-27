@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNotes } from "@/contexts/NotesContext";
@@ -18,6 +18,8 @@ import {
   Circle,
   Share2,
   Pin,
+  AlertTriangle,
+  X,
 } from "lucide-react";
 import Link from "next/link";
 import MinimalMarkdownEditor from "@/components/editor/MinimalMarkdownEditor";
@@ -38,6 +40,25 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [isDirty, setIsDirty] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
+  const [remoteChanged, setRemoteChanged] = useState(false);
+  const [showRemoteView, setShowRemoteView] = useState(false);
+  const lastSyncedAtRef = useRef<number>(0);
+  const isDirtyRef = useRef(false);
+  const isLoadingRef = useRef(false);
+  const isFetchingRef = useRef(!!noteId);
+  const remoteChangedRef = useRef(false);
+  const remoteNoteRef = useRef<{
+    title: string;
+    content: string;
+    isEncrypted: boolean;
+    isPinned: boolean;
+    updatedAt: string;
+  } | null>(null);
+
+  useEffect(() => { isDirtyRef.current = isDirty; }, [isDirty]);
+  useEffect(() => { isLoadingRef.current = isLoading; }, [isLoading]);
+  useEffect(() => { isFetchingRef.current = isFetching; }, [isFetching]);
+  useEffect(() => { remoteChangedRef.current = remoteChanged; }, [remoteChanged]);
 
   useEffect(() => {
     const savedMode = localStorage.getItem("editorPreviewMode");
@@ -59,6 +80,9 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
   const router = useRouter();
 
   useEffect(() => {
+    setRemoteChanged(false);
+    setShowRemoteView(false);
+    remoteNoteRef.current = null;
     if (noteId) {
       fetchNote();
     } else {
@@ -78,14 +102,91 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
 
   // Auto-save effect
   useEffect(() => {
-    if (!isDirty || isFetching || isLoading) return;
+    if (!isDirty || isFetching || isLoading || remoteChanged) return;
 
     const timer = setTimeout(() => {
       handleSave();
-    }, 5000); // 5 seconds
+    }, 3000); // 3 seconds
 
     return () => clearTimeout(timer);
-  }, [isDirty, title, content, isEncrypted, isFetching, isLoading]);
+  }, [isDirty, title, content, isEncrypted, isFetching, isLoading, remoteChanged]);
+
+  // Poll for remote updates every 5s + on tab focus
+  useEffect(() => {
+    if (!noteId) return;
+
+    const fetchAndStashRemote = async () => {
+      const res = await fetch(`/api/notes/${noteId}`);
+      if (!res.ok) return null;
+      const { note } = await res.json();
+      let plaintext = note.content as string;
+      if (note.isEncrypted && note.iv && masterKey) {
+        plaintext = await decryptNoteContent(note.content, note.iv, masterKey);
+      }
+      return {
+        title: note.title as string,
+        content: plaintext,
+        isEncrypted: !!note.isEncrypted,
+        isPinned: !!note.isPinned,
+        updatedAt: note.updatedAt as string,
+      };
+    };
+
+    const pollOnce = async () => {
+      if (document.hidden) return;
+      if (isFetchingRef.current || isLoadingRef.current) return;
+
+      try {
+        if (isDirtyRef.current) {
+          // Dirty: lightweight check only; surface banner if newer
+          const metaRes = await fetch(`/api/notes/${noteId}/meta`);
+          if (!metaRes.ok) return;
+          const meta = await metaRes.json();
+          const serverUpdatedAt = new Date(meta.updatedAt).getTime();
+          if (serverUpdatedAt <= lastSyncedAtRef.current) return;
+          const existing = remoteNoteRef.current;
+          if (existing && new Date(existing.updatedAt).getTime() === serverUpdatedAt) return;
+
+          const remote = await fetchAndStashRemote();
+          if (!remote) return;
+          remoteNoteRef.current = remote;
+          setRemoteChanged(true);
+          return;
+        }
+
+        // Clean: apply newer remote
+        const remote = await fetchAndStashRemote();
+        if (!remote) return;
+        const serverUpdatedAt = new Date(remote.updatedAt).getTime();
+        if (serverUpdatedAt <= lastSyncedAtRef.current) return;
+        if (isDirtyRef.current) {
+          remoteNoteRef.current = remote;
+          setRemoteChanged(true);
+          return;
+        }
+
+        setTitle(remote.title);
+        setContent(remote.content);
+        setIsEncrypted(remote.isEncrypted);
+        setIsPinned(remote.isPinned);
+        lastSyncedAtRef.current = serverUpdatedAt;
+        setTimeout(() => setIsDirty(false), 0);
+      } catch {
+        // swallow; will retry next tick
+      }
+    };
+
+    const interval = setInterval(pollOnce, 5_000);
+    const onVisible = () => {
+      if (!document.hidden) pollOnce();
+    };
+    document.addEventListener('visibilitychange', onVisible);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
+  }, [noteId, masterKey]);
 
   const fetchNote = async () => {
     setIsFetching(true);
@@ -110,6 +211,7 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
       } else {
         setContent(note.content);
       }
+      lastSyncedAtRef.current = new Date(note.updatedAt).getTime();
       // After fetching, it's not dirty
       setTimeout(() => setIsDirty(false), 0);
     } catch (err: any) {
@@ -140,7 +242,7 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
         iv = encryptedData.iv;
       }
 
-      const payload = {
+      const payload: Record<string, unknown> = {
         title,
         content: finalContent,
         snippet: isEncrypted ? "" : (content || "").substring(0, 100).replace(/\n/g, " "),
@@ -152,11 +254,33 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
       const url = noteId ? `/api/notes/${noteId}` : "/api/notes";
       const method = noteId ? "PUT" : "POST";
 
+      if (noteId && lastSyncedAtRef.current > 0) {
+        payload.expectedUpdatedAt = new Date(lastSyncedAtRef.current).toISOString();
+      }
+
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
+
+      if (res.status === 409) {
+        const data = await res.json();
+        const note = data.note;
+        let plaintext = note.content as string;
+        if (note.isEncrypted && note.iv && masterKey) {
+          plaintext = await decryptNoteContent(note.content, note.iv, masterKey);
+        }
+        remoteNoteRef.current = {
+          title: note.title,
+          content: plaintext,
+          isEncrypted: !!note.isEncrypted,
+          isPinned: !!note.isPinned,
+          updatedAt: note.updatedAt,
+        };
+        setRemoteChanged(true);
+        return;
+      }
 
       if (!res.ok) {
         const errData = await res.json();
@@ -176,6 +300,7 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
       });
       setIsDirty(false);
       setLastSaved(new Date());
+      lastSyncedAtRef.current = new Date(result.note.updatedAt).getTime();
 
       if (!noteId) {
         router.push(`/notes/${result.note._id}`);
@@ -185,6 +310,30 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleUseRemote = () => {
+    const r = remoteNoteRef.current;
+    if (!r) return;
+    setTitle(r.title);
+    setContent(r.content);
+    setIsEncrypted(r.isEncrypted);
+    setIsPinned(r.isPinned);
+    lastSyncedAtRef.current = new Date(r.updatedAt).getTime();
+    remoteNoteRef.current = null;
+    setRemoteChanged(false);
+    setShowRemoteView(false);
+    setTimeout(() => setIsDirty(false), 0);
+  };
+
+  const handleOverwriteMine = async () => {
+    const r = remoteNoteRef.current;
+    if (!r) return;
+    lastSyncedAtRef.current = new Date(r.updatedAt).getTime();
+    remoteNoteRef.current = null;
+    setRemoteChanged(false);
+    setShowRemoteView(false);
+    await handleSave();
   };
 
   const handleDelete = async () => {
@@ -355,6 +504,42 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
         </div>
       </div>
 
+      {remoteChanged && (
+        <div className="px-3 md:px-4 py-2.5 bg-amber-50 dark:bg-amber-500/10 border-b border-amber-200 dark:border-amber-500/30">
+          <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-3">
+            <div className="flex items-center gap-2 flex-1 min-w-0">
+              <AlertTriangle size={16} className="text-amber-600 dark:text-amber-400 flex-shrink-0" />
+              <span className="text-sm text-amber-800 dark:text-amber-300">
+                This note was updated elsewhere.
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setShowRemoteView(true)}
+                className="flex-1 md:flex-none px-3 py-2 md:py-1 text-xs font-medium text-amber-800 dark:text-amber-200 bg-white/60 hover:bg-amber-100 dark:bg-amber-500/10 dark:hover:bg-amber-500/20 rounded transition active:scale-[0.97] touch-manipulation [-webkit-tap-highlight-color:transparent]"
+              >
+                View
+              </button>
+              <button
+                type="button"
+                onClick={handleUseRemote}
+                className="flex-1 md:flex-none px-3 py-2 md:py-1 text-xs font-medium text-amber-800 dark:text-amber-200 bg-white/60 hover:bg-amber-100 dark:bg-amber-500/10 dark:hover:bg-amber-500/20 rounded transition active:scale-[0.97] touch-manipulation [-webkit-tap-highlight-color:transparent]"
+              >
+                Use new
+              </button>
+              <button
+                type="button"
+                onClick={handleOverwriteMine}
+                className="flex-1 md:flex-none px-3 py-2 md:py-1 text-xs font-medium text-white bg-amber-600 hover:bg-amber-700 rounded transition active:scale-[0.97] touch-manipulation [-webkit-tap-highlight-color:transparent]"
+              >
+                Keep mine
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Editor Area */}
       <div className="flex-1 flex flex-col overflow-hidden">
         <div className="px-6 py-6 pb-2 flex-shrink-0">
@@ -375,6 +560,61 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
           />
         </div>
       </div>
+
+      {showRemoteView && remoteNoteRef.current && (
+        <div
+          className="fixed inset-0 z-50 flex items-end md:items-center justify-center md:p-4 bg-black/40 backdrop-blur-sm"
+          onClick={() => setShowRemoteView(false)}
+        >
+          <div
+            className="w-full max-w-2xl h-[85vh] md:h-auto md:max-h-[80vh] bg-white dark:bg-[#252525] rounded-t-2xl md:rounded-lg shadow-xl border border-zinc-200 dark:border-zinc-800 flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-4 md:px-5 py-3 border-b border-zinc-200 dark:border-zinc-800">
+              <div className="min-w-0 pr-2">
+                <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
+                  Server version
+                </h2>
+                <div className="text-[11px] text-zinc-500 mt-0.5 truncate">
+                  Updated {new Date(remoteNoteRef.current.updatedAt).toLocaleString()}
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowRemoteView(false)}
+                className="p-2 -mr-1 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 rounded transition active:scale-95 touch-manipulation [-webkit-tap-highlight-color:transparent]"
+                aria-label="Close"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <div className="flex-1 overflow-auto px-4 md:px-5 py-4">
+              <div className="text-sm font-bold text-zinc-900 dark:text-zinc-50 mb-2 break-words">
+                {remoteNoteRef.current.title}
+              </div>
+              <pre className="text-xs whitespace-pre-wrap break-words font-mono text-zinc-700 dark:text-zinc-300">
+                {remoteNoteRef.current.content}
+              </pre>
+            </div>
+            <div className="px-4 md:px-5 py-3 border-t border-zinc-200 dark:border-zinc-800 flex gap-2">
+              <button
+                type="button"
+                onClick={() => setShowRemoteView(false)}
+                className="flex-1 md:flex-none px-3 py-2 md:py-1.5 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-md transition active:scale-[0.98] touch-manipulation [-webkit-tap-highlight-color:transparent]"
+              >
+                Close
+              </button>
+              <button
+                type="button"
+                onClick={handleUseRemote}
+                className="flex-1 md:flex-none px-3 py-2 md:py-1.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition active:scale-[0.98] touch-manipulation [-webkit-tap-highlight-color:transparent]"
+              >
+                Load this version
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

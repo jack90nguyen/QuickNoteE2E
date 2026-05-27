@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { Eye, EyeOff } from 'lucide-react';
 import { loginSchema, type LoginInput } from '@/lib/validators';
 import { useAuth } from '@/contexts/AuthContext';
 import { deriveKeyFromPassword, decryptMasterKey } from '@/lib/crypto-client';
@@ -13,6 +14,7 @@ export default function LoginForm() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [remember, setRemember] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const { login } = useAuth();
   const router = useRouter();
 
@@ -91,12 +93,23 @@ export default function LoginForm() {
 
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Password</label>
-          <input
-            {...register('password')}
-            type="password"
-            className="w-full px-3 py-2 mt-1 border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-            placeholder="••••••••"
-          />
+          <div className="relative mt-1">
+            <input
+              {...register('password')}
+              type={showPassword ? 'text' : 'password'}
+              className="w-full pl-3 pr-10 py-2 border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+              placeholder="••••••••"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((v) => !v)}
+              tabIndex={-1}
+              className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 rounded"
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
+            >
+              {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+            </button>
+          </div>
           {errors.password && <p className="mt-1 text-sm text-red-500">{errors.password.message}</p>}
         </div>
 
