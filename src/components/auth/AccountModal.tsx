@@ -54,19 +54,19 @@ export default function AccountModal({ open, onClose }: AccountModalProps) {
     setSuccess('');
 
     if (newPassword.length < 8) {
-      setError('Mật khẩu mới phải có ít nhất 8 ký tự');
+      setError('New password must be at least 8 characters');
       return;
     }
     if (newPassword !== confirmPassword) {
-      setError('Mật khẩu xác nhận không khớp');
+      setError('Passwords do not match');
       return;
     }
     if (newPassword === currentPassword) {
-      setError('Mật khẩu mới phải khác mật khẩu hiện tại');
+      setError('New password must be different from current password');
       return;
     }
     if (!masterKey) {
-      setError('Phiên đã hết hạn. Vui lòng đăng nhập lại.');
+      setError('Session expired. Please sign in again.');
       return;
     }
 
@@ -90,16 +90,16 @@ export default function AccountModal({ open, onClose }: AccountModalProps) {
 
       const result = await res.json();
       if (!res.ok) {
-        throw new Error(result.error || 'Đổi mật khẩu thất bại');
+        throw new Error(result.error || 'Failed to change password');
       }
 
       updateUser({ kdfSalt: newSalt, encryptedMasterKey, masterKeyIv });
-      setSuccess('Đổi mật khẩu thành công');
+      setSuccess('Password changed successfully');
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Đã có lỗi xảy ra';
+      const message = err instanceof Error ? err.message : 'Something went wrong';
       setError(message);
     } finally {
       setIsSubmitting(false);
@@ -116,7 +116,7 @@ export default function AccountModal({ open, onClose }: AccountModalProps) {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-200 dark:border-zinc-800">
-          <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">Tài khoản</h2>
+          <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">Account</h2>
           <button
             type="button"
             onClick={onClose}
@@ -141,11 +141,11 @@ export default function AccountModal({ open, onClose }: AccountModalProps) {
           <form onSubmit={handleSubmit} className="space-y-3">
             <div className="flex items-center gap-2 text-sm font-medium text-zinc-700 dark:text-zinc-300">
               <KeyRound size={14} />
-              Đổi mật khẩu
+              Change password
             </div>
 
             <PasswordField
-              label="Mật khẩu hiện tại"
+              label="Current password"
               value={currentPassword}
               onChange={setCurrentPassword}
               show={showCurrent}
@@ -153,7 +153,7 @@ export default function AccountModal({ open, onClose }: AccountModalProps) {
               autoComplete="current-password"
             />
             <PasswordField
-              label="Mật khẩu mới"
+              label="New password"
               value={newPassword}
               onChange={setNewPassword}
               show={showNew}
@@ -161,7 +161,7 @@ export default function AccountModal({ open, onClose }: AccountModalProps) {
               autoComplete="new-password"
             />
             <PasswordField
-              label="Xác nhận mật khẩu mới"
+              label="Confirm new password"
               value={confirmPassword}
               onChange={setConfirmPassword}
               show={showNew}
@@ -186,14 +186,14 @@ export default function AccountModal({ open, onClose }: AccountModalProps) {
                 onClick={onClose}
                 className="px-3 py-1.5 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-md transition"
               >
-                Đóng
+                Close
               </button>
               <button
                 type="submit"
                 disabled={isSubmitting || !currentPassword || !newPassword || !confirmPassword}
                 className="px-3 py-1.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isSubmitting ? 'Đang lưu...' : 'Đổi mật khẩu'}
+                {isSubmitting ? 'Saving...' : 'Change password'}
               </button>
             </div>
           </form>

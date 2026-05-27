@@ -40,17 +40,23 @@ export async function getUserFromSession(): Promise<SessionPayload | null> {
   }
 
   const decoded = verifyToken(token) as Partial<SessionPayload> | null;
-  if (!decoded?.userId || typeof decoded.tokenVersion !== 'number') {
+  if (!decoded?.userId) {
     return null;
   }
+
+  const tokenVersion = typeof decoded.tokenVersion === 'number' ? decoded.tokenVersion : 0;
 
   await connectToDatabase();
-  const user = await User.findById(decoded.userId).select('tokenVersion').lean<{ tokenVersion: number } | null>();
-  if (!user || user.tokenVersion !== decoded.tokenVersion) {
+  const user = await User.findById(decoded.userId).select('tokenVersion').lean<{ tokenVersion?: number } | null>();
+  if (!user) {
+    return null;
+  }
+  const dbVersion = user.tokenVersion ?? 0;
+  if (dbVersion !== tokenVersion) {
     return null;
   }
 
-  return { userId: decoded.userId, tokenVersion: decoded.tokenVersion };
+  return { userId: decoded.userId, tokenVersion };
 }
 
 export async function setAuthCookie(token: string, remember: boolean = false) {

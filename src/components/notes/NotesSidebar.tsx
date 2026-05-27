@@ -155,7 +155,7 @@ export default function NotesSidebar() {
           type="button"
           onClick={() => setShowAccount(true)}
           className="text-xs font-medium text-zinc-600 dark:text-zinc-400 truncate pr-2 hover:text-zinc-900 dark:hover:text-zinc-100 transition text-left"
-          title="Tài khoản"
+          title="Account"
         >
           {user?.email}
         </button>
