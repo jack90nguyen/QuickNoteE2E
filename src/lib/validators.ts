@@ -39,6 +39,7 @@ export const changePasswordApiSchema = z.object({
 
 export const noteUpsertSchema = z.object({
   title: z.string().min(1, 'Title is required').max(200, 'Title too long'),
+  folder: z.string().max(100, 'Folder name too long').optional().default(''),
   content: z.string().max(1_000_000, 'Content too large').default(''),
   snippet: z.string().max(300).optional(),
   isEncrypted: z.boolean().default(false),

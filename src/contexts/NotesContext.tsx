@@ -10,11 +10,13 @@ import {
   ReactNode,
 } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useConfirm } from '@/components/ui/ConfirmDialog';
 import { decryptNoteContent } from '@/lib/crypto-client';
 
 interface Note {
   _id: string;
   title: string;
+  folder?: string;
   content?: string;
   snippet?: string;
   isEncrypted: boolean;
@@ -23,7 +25,7 @@ interface Note {
   isPinned: boolean;
 }
 
-type SortBy = 'updatedAt' | 'title';
+type SortBy = 'updatedAt' | 'title' | 'folder';
 
 interface NotesContextType {
   notes: Note[];
@@ -43,13 +45,14 @@ export function NotesProvider({ children }: { children: ReactNode }) {
   const [notes, setNotes] = useState<Note[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [sortBy, setSortBy] = useState<SortBy>('title');
+  const [sortBy, setSortBy] = useState<SortBy>('folder');
   const { masterKey, user } = useAuth();
+  const confirm = useConfirm();
 
   // Load sort preference
   useEffect(() => {
     const savedSort = localStorage.getItem('note_sort_by') as SortBy;
-    if (savedSort === 'updatedAt' || savedSort === 'title') {
+    if (savedSort === 'updatedAt' || savedSort === 'title' || savedSort === 'folder') {
       setSortBy(savedSort);
     }
   }, []);
@@ -68,6 +71,15 @@ export function NotesProvider({ children }: { children: ReactNode }) {
 
       // Then sort by user preference
       if (currentSortBy === 'title') {
+        const titleA = (a.title || '').toLowerCase();
+        const titleB = (b.title || '').toLowerCase();
+        return titleA.localeCompare(titleB);
+      }
+      if (currentSortBy === 'folder') {
+        const folderA = (a.folder || '').toLowerCase();
+        const folderB = (b.folder || '').toLowerCase();
+        const cmp = folderA.localeCompare(folderB);
+        if (cmp !== 0) return cmp;
         const titleA = (a.title || '').toLowerCase();
         const titleB = (b.title || '').toLowerCase();
         return titleA.localeCompare(titleB);
@@ -129,7 +141,13 @@ export function NotesProvider({ children }: { children: ReactNode }) {
   }, [sortBy, sortNotes]);
 
   const deleteNote = useCallback(async (id: string) => {
-    if (!confirm('Are you sure you want to delete this note?')) return;
+    const ok = await confirm({
+      title: 'Delete note',
+      message: 'Are you sure you want to delete this note?',
+      confirmText: 'Delete',
+      danger: true,
+    });
+    if (!ok) return;
     try {
       const res = await fetch(`/api/notes/${id}`, { method: 'DELETE' });
       if (res.ok) {
@@ -138,7 +156,7 @@ export function NotesProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error('Failed to delete note', error);
     }
-  }, []);
+  }, [confirm]);
 
   const value = useMemo(
     () => ({

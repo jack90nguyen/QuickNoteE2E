@@ -4,17 +4,18 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useNotes } from '@/contexts/NotesContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { 
-  Lock, 
-  Search, 
-  SquarePen, 
-  LogOut, 
-  Sun, 
-  Moon, 
-  Pin, 
+import {
+  Lock,
+  Search,
+  SquarePen,
+  LogOut,
+  Sun,
+  Moon,
+  Pin,
   PinOff,
   Clock,
-  Type
+  Type,
+  Folder
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useEffect, useMemo, useState } from 'react';
@@ -78,10 +79,10 @@ export default function NotesSidebar() {
             onClick={() => setShowSortOptions(!showSortOptions)}
             className="flex items-center gap-1.5 text-xs font-medium text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300 transition"
           >
-            {sortBy === 'updatedAt' ? <Clock size={14} /> : <Type size={14} />}
-            Sort by {sortBy === 'updatedAt' ? 'Date' : 'Title'}
+            {sortBy === 'updatedAt' ? <Clock size={14} /> : sortBy === 'folder' ? <Folder size={14} /> : <Type size={14} />}
+            Sort by {sortBy === 'updatedAt' ? 'Date' : sortBy === 'folder' ? 'Folder' : 'Title'}
           </button>
-          
+
           {showSortOptions && (
             <div className="flex gap-2 bg-zinc-200 dark:bg-zinc-800 p-1 rounded-md">
               <button
@@ -97,6 +98,13 @@ export default function NotesSidebar() {
                 title="Sort by Title"
               >
                 <Type size={12} />
+              </button>
+              <button
+                onClick={() => { setSortBy('folder'); setShowSortOptions(false); }}
+                className={`p-1 rounded ${sortBy === 'folder' ? 'bg-white dark:bg-zinc-700 shadow-sm' : ''}`}
+                title="Sort by Folder"
+              >
+                <Folder size={12} />
               </button>
             </div>
           )}
@@ -128,6 +136,12 @@ export default function NotesSidebar() {
                       </h3>
                     </div>
                     <div className="flex flex-col gap-1">
+                      {note.folder && (
+                        <div className="flex items-center gap-1 text-[10px] font-medium text-zinc-600 dark:text-zinc-400">
+                          <Folder size={10} className="flex-shrink-0" />
+                          <span className="truncate">{note.folder}</span>
+                        </div>
+                      )}
                       {note.isEncrypted ? (
                         <div className="flex items-center gap-1.5 text-[11px] text-amber-600 dark:text-amber-500 font-medium">
                           <Lock size={12} />
