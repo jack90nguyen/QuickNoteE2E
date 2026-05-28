@@ -3,6 +3,7 @@ import { Space_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { ConfirmProvider } from "@/components/ui/ConfirmDialog";
 
 const spaceMono = Space_Mono({ 
   weight: ['400', '700'],
@@ -57,7 +58,9 @@ export default function RootLayout({
       <body className={`${spaceMono.className} ${spaceMono.variable}`}>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
           <AuthProvider>
-            {children}
+            <ConfirmProvider>
+              {children}
+            </ConfirmProvider>
           </AuthProvider>
         </ThemeProvider>
       </body>

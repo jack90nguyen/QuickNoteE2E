@@ -20,6 +20,7 @@ import {
   Pin,
   AlertTriangle,
   X,
+  Folder,
 } from "lucide-react";
 import Link from "next/link";
 import MinimalMarkdownEditor from "@/components/editor/MinimalMarkdownEditor";
@@ -30,6 +31,7 @@ interface NoteEditorProps {
 
 export default function NoteEditor({ noteId }: NoteEditorProps) {
   const [title, setTitle] = useState("");
+  const [folder, setFolder] = useState("");
   const [content, setContent] = useState<string>("");
   const [isEncrypted, setIsEncrypted] = useState(false);
   const [isPinned, setIsPinned] = useState(false);
@@ -49,6 +51,7 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
   const remoteChangedRef = useRef(false);
   const remoteNoteRef = useRef<{
     title: string;
+    folder: string;
     content: string;
     isEncrypted: boolean;
     isPinned: boolean;
@@ -87,6 +90,7 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
       fetchNote();
     } else {
       setTitle("");
+      setFolder("");
       setContent("");
       setIsEncrypted(false);
       setIsPinned(false);
@@ -98,7 +102,7 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
   useEffect(() => {
     if (isFetching) return;
     setIsDirty(true);
-  }, [title, content, isEncrypted, isPinned]);
+  }, [title, folder, content, isEncrypted, isPinned]);
 
   // Auto-save effect
   useEffect(() => {
@@ -109,7 +113,7 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
     }, 3000); // 3 seconds
 
     return () => clearTimeout(timer);
-  }, [isDirty, title, content, isEncrypted, isFetching, isLoading, remoteChanged]);
+  }, [isDirty, title, folder, content, isEncrypted, isFetching, isLoading, remoteChanged]);
 
   // Poll for remote updates every 5s + on tab focus
   useEffect(() => {
@@ -125,6 +129,7 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
       }
       return {
         title: note.title as string,
+        folder: (note.folder as string) || '',
         content: plaintext,
         isEncrypted: !!note.isEncrypted,
         isPinned: !!note.isPinned,
@@ -166,6 +171,7 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
         }
 
         setTitle(remote.title);
+        setFolder(remote.folder);
         setContent(remote.content);
         setIsEncrypted(remote.isEncrypted);
         setIsPinned(remote.isPinned);
@@ -198,6 +204,7 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
       const note = data.note;
 
       setTitle(note.title);
+      setFolder(note.folder || "");
       setIsEncrypted(note.isEncrypted);
       setIsPinned(note.isPinned || false);
 
@@ -244,6 +251,7 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
 
       const payload: Record<string, unknown> = {
         title,
+        folder: folder.trim(),
         content: finalContent,
         snippet: isEncrypted ? "" : (content || "").substring(0, 100).replace(/\n/g, " "),
         isEncrypted,
@@ -273,6 +281,7 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
         }
         remoteNoteRef.current = {
           title: note.title,
+          folder: note.folder || '',
           content: plaintext,
           isEncrypted: !!note.isEncrypted,
           isPinned: !!note.isPinned,
@@ -291,6 +300,7 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
       upsertNote({
         _id: result.note._id,
         title: result.note.title,
+        folder: result.note.folder || "",
         content: content || "",
         snippet: result.note.snippet,
         isEncrypted: result.note.isEncrypted,
@@ -316,6 +326,7 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
     const r = remoteNoteRef.current;
     if (!r) return;
     setTitle(r.title);
+    setFolder(r.folder);
     setContent(r.content);
     setIsEncrypted(r.isEncrypted);
     setIsPinned(r.isPinned);
@@ -547,9 +558,32 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                handleSave();
+              }
+            }}
             placeholder="Note Title"
             className="w-full text-2xl font-bold bg-transparent border-none focus:ring-0 text-zinc-900 dark:text-zinc-50 placeholder-zinc-400 dark:placeholder-zinc-600 p-0"
           />
+          <div className="flex items-center gap-1.5 mt-2 text-zinc-500 dark:text-zinc-400">
+            <Folder size={14} className="flex-shrink-0" />
+            <input
+              type="text"
+              value={folder}
+              onChange={(e) => setFolder(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleSave();
+                }
+              }}
+              placeholder="Folder (optional)"
+              maxLength={100}
+              className="flex-1 text-sm bg-transparent border-none focus:ring-0 text-zinc-700 dark:text-zinc-300 placeholder-zinc-400 dark:placeholder-zinc-600 p-0"
+            />
+          </div>
         </div>
 
         <div className="flex-1 overflow-hidden">
