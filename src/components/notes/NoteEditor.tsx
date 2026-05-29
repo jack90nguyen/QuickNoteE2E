@@ -21,6 +21,7 @@ import {
   AlertTriangle,
   X,
   Folder,
+  Download,
 } from "lucide-react";
 import Link from "next/link";
 import MinimalMarkdownEditor from "@/components/editor/MinimalMarkdownEditor";
@@ -354,6 +355,19 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
     }
   };
 
+  const handleDownload = () => {
+    const safeTitle = (title || "untitled").replace(/[\/\\:*?"<>|]/g, "_").trim() || "untitled";
+    const blob = new Blob([content || ""], { type: "text/markdown;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${safeTitle}.md`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   const handleShare = () => {
     if (!noteId) return;
     const url = `${window.location.origin}/shared/${noteId}`;
@@ -463,6 +477,19 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
             <Save size={16} className="hidden md:inline" />
             <span className="hidden md:inline">Save</span>
           </button>
+
+          {noteId && (
+            <button
+              onClick={handleDownload}
+              className="flex items-center gap-1 p-1.5 md:px-3 md:py-1.5 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 transition text-zinc-600 dark:text-zinc-400 text-sm font-medium"
+              title="Download as Markdown"
+              aria-label="Download as Markdown"
+            >
+              <Download size={18} className="md:hidden" />
+              <Download size={16} className="hidden md:inline" />
+              <span className="hidden md:inline">Download</span>
+            </button>
+          )}
 
           {noteId && !isEncrypted && (
             <button
