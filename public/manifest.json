@@ -4,8 +4,8 @@
   "description": "Secure markdown notes with E2E encryption",
   "start_url": "/notes",
   "display": "standalone",
-  "background_color": "#1e1e1e",
-  "theme_color": "#2563eb",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
   "icons": [
     {
       "src": "/favicon-256.png",
