@@ -17,6 +17,7 @@ A secure, minimal markdown notes app with optional end-to-end encryption. Notes 
 - **Auto-save** with a 5-second debounce and visible saving / saved / unsaved indicators.
 - **Search** across titles.
 - **Dark / light theme**, mobile-friendly split-pane UI, PWA manifest.
+- **MCP Remote Server** — expose your plaintext notes to AI tools (Claude Code, Claude Desktop, etc.) via the Model Context Protocol with API tokens you manage from the Account modal.
 - **Developed by Jack90Nguyen** — minimal, secure, and personal.
 
 ## Tech stack
@@ -27,6 +28,7 @@ A secure, minimal markdown notes app with optional end-to-end encryption. Notes 
 - **Database**: MongoDB + Mongoose
 - **Auth**: JWT (`jsonwebtoken`), bcrypt password hashing
 - **Crypto**: Web Crypto API (PBKDF2 key derivation, AES-GCM content encryption)
+- **MCP**: `@modelcontextprotocol/sdk` with Streamable HTTP transport
 - **Validation**: Zod
 
 ## Getting started
@@ -72,20 +74,64 @@ npm start
 - Encrypted notes are saved as AES-GCM ciphertext + iv; plaintext never leaves the browser.
 - API input is validated with Zod; server errors are logged internally and returned to clients as generic `Internal server error`.
 
+## MCP Remote Server
+
+The app ships with a remote [MCP](https://modelcontextprotocol.io) server at `POST /api/mcp` so AI clients (Claude Code, Claude Desktop, …) can search, read, create, and update your notes.
+
+### Security boundary
+
+- Authenticated via a **Bearer API token** generated per user — separate from the web session cookie.
+- Only **plaintext notes** are exposed. Encrypted notes are filtered out at every tool because the server has no access to the master key.
+- `delete_note` is intentionally **not** exposed.
+- Tokens are stored as bcrypt hashes; the raw value is shown exactly once at creation and can be revoked any time.
+
+### Tools exposed
+
+| Tool | Description |
+| --- | --- |
+| `list_notes` | List plaintext notes (metadata only). Optional `folder`, `limit`, `pinnedFirst`. |
+| `search_notes` | Case-insensitive search across title and content. Returns metadata + matched snippet. |
+| `get_note` | Read a single plaintext note by id, including full content. |
+| `create_note` | Create a new plaintext note (`title`, optional `content`, `folder`, `isPinned`). |
+| `update_note` | Patch fields of a plaintext note. Supports `expectedUpdatedAt` for optimistic concurrency. |
+| `list_folders` | List distinct folder names that contain plaintext notes. |
+
+### Creating and using a token
+
+1. Sign in, open the **Account** modal (avatar menu).
+2. Under **API tokens**, enter a name (e.g. `Claude Code`) and click **Create**.
+3. **Copy the token immediately** — it is only shown once.
+4. Add the server to your MCP client config:
+
+```json
+{
+  "mcpServers": {
+    "quicknote": {
+      "type": "http",
+      "url": "https://<your-domain>/api/mcp",
+      "headers": { "Authorization": "Bearer qn_..." }
+    }
+  }
+}
+```
+
+Revoke any token from the same modal — the change takes effect on the next request.
+
 ## Project structure
 
 ```
 src/
   app/
-    api/            # Route handlers (auth, notes CRUD)
+    api/            # Route handlers (auth, notes CRUD, api tokens, /api/mcp)
     login/ register/ notes/
   components/
     editor/         # MinimalMarkdownEditor, EditableArea, Toolbar, Preview
     notes/          # NoteEditor, NotesSidebar
-    auth/ ThemeProvider
+    auth/           # LoginForm, RegisterForm, AccountModal, ApiTokensSection
   contexts/         # AuthContext, NotesContext
-  lib/              # db, auth, crypto (server + client), validators, markdown-insert
-  models/           # User, Note (Mongoose schemas)
+  lib/              # db, auth, crypto (server + client), validators, markdown-insert,
+                    # mcp-auth (Bearer token verification), mcp-server (tool factory)
+  models/           # User, Note, ApiToken (Mongoose schemas)
   middleware.ts     # auth guard
 ```
 

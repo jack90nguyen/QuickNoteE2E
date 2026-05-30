@@ -8,6 +8,7 @@ import {
   encryptMasterKey,
   generateSalt,
 } from '@/lib/crypto-client';
+import ApiTokensSection from '@/components/auth/ApiTokensSection';
 
 interface AccountModalProps {
   open: boolean;
@@ -112,7 +113,7 @@ export default function AccountModal({ open, onClose }: AccountModalProps) {
       onClick={onClose}
     >
       <div
-        className="w-full max-w-md bg-white dark:bg-[#252525] rounded-lg shadow-xl border border-zinc-200 dark:border-zinc-800"
+        className="w-full max-w-md max-h-[90vh] overflow-y-auto bg-white dark:bg-[#252525] rounded-lg shadow-xl border border-zinc-200 dark:border-zinc-800"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-200 dark:border-zinc-800">
@@ -197,6 +198,10 @@ export default function AccountModal({ open, onClose }: AccountModalProps) {
               </button>
             </div>
           </form>
+
+          <div className="pt-4 border-t border-zinc-200 dark:border-zinc-800">
+            <ApiTokensSection />
+          </div>
         </div>
       </div>
     </div>
