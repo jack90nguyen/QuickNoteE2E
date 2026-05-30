@@ -51,6 +51,10 @@ export const notePatchSchema = noteUpsertSchema.partial().extend({
   expectedUpdatedAt: z.string().datetime().optional(),
 });
 
+export const apiTokenCreateSchema = z.object({
+  name: z.string().min(1, 'Name is required').max(100, 'Name too long'),
+});
+
 export type LoginInput = z.infer<typeof loginSchema>;
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type NoteUpsertInput = z.infer<typeof noteUpsertSchema>;
