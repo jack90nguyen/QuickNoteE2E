@@ -22,6 +22,8 @@ import {
   X,
   Folder,
   Download,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from "lucide-react";
 import Link from "next/link";
 import MinimalMarkdownEditor from "@/components/editor/MinimalMarkdownEditor";
@@ -80,7 +82,7 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
   };
 
   const { masterKey } = useAuth();
-  const { upsertNote, deleteNote } = useNotes();
+  const { upsertNote, deleteNote, isSidebarVisible, toggleSidebar } = useNotes();
   const router = useRouter();
 
   useEffect(() => {
@@ -403,6 +405,15 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
           >
             <ChevronLeft size={18} />
           </Link>
+
+          <button
+            onClick={toggleSidebar}
+            className="hidden md:inline-flex items-center p-1.5 rounded-md text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition"
+            title={isSidebarVisible ? "Hide sidebar" : "Show sidebar"}
+            aria-label={isSidebarVisible ? "Hide sidebar" : "Show sidebar"}
+          >
+            {isSidebarVisible ? <PanelLeftClose size={16} /> : <PanelLeftOpen size={16} />}
+          </button>
 
           <button
             onClick={() => setIsEncrypted(!isEncrypted)}

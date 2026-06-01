@@ -22,13 +22,14 @@ import { useEffect, useMemo, useState } from 'react';
 import AccountModal from '@/components/auth/AccountModal';
 
 export default function NotesSidebar() {
-  const { 
-    notes, 
-    isLoading, 
-    searchQuery, 
-    setSearchQuery, 
-    sortBy, 
-    setSortBy
+  const {
+    notes,
+    isLoading,
+    searchQuery,
+    setSearchQuery,
+    sortBy,
+    setSortBy,
+    isSidebarVisible
   } = useNotes();
   const { user, logout } = useAuth();
   const pathname = usePathname();
@@ -51,7 +52,7 @@ export default function NotesSidebar() {
   const isIndexPath = pathname === '/notes';
 
   return (
-    <div className={`${isIndexPath ? 'flex w-full' : 'hidden'} md:flex md:w-80 flex-shrink-0 flex-col h-full bg-[#f9f9f9] dark:bg-[#252525] border-r border-zinc-200 dark:border-zinc-800`}>
+    <div className={`${isIndexPath ? 'flex w-full' : 'hidden'} ${isSidebarVisible ? 'md:flex md:w-80' : 'md:hidden'} flex-shrink-0 flex-col h-full bg-[#f9f9f9] dark:bg-[#252525] border-r border-zinc-200 dark:border-zinc-800`}>
       {/* Top bar */}
       <div className="p-4 flex flex-col gap-3 border-b border-zinc-200 dark:border-zinc-800">
         <div className="flex items-center justify-between gap-2">
