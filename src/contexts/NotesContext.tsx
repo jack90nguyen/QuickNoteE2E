@@ -37,6 +37,8 @@ interface NotesContextType {
   setSearchQuery: (query: string) => void;
   sortBy: SortBy;
   setSortBy: (sort: SortBy) => void;
+  isSidebarVisible: boolean;
+  toggleSidebar: () => void;
 }
 
 const NotesContext = createContext<NotesContextType | undefined>(undefined);
@@ -46,6 +48,7 @@ export function NotesProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<SortBy>('folder');
+  const [isSidebarVisible, setIsSidebarVisible] = useState(true);
   const { masterKey, user } = useAuth();
   const confirm = useConfirm();
 
@@ -61,6 +64,20 @@ export function NotesProvider({ children }: { children: ReactNode }) {
   const handleSetSortBy = useCallback((sort: SortBy) => {
     setSortBy(sort);
     localStorage.setItem('note_sort_by', sort);
+  }, []);
+
+  // Load sidebar visibility preference
+  useEffect(() => {
+    const saved = localStorage.getItem('sidebar_visible');
+    if (saved === 'false') setIsSidebarVisible(false);
+  }, []);
+
+  const toggleSidebar = useCallback(() => {
+    setIsSidebarVisible((prev) => {
+      const next = !prev;
+      localStorage.setItem('sidebar_visible', String(next));
+      return next;
+    });
   }, []);
 
   const sortNotes = useCallback((notesList: Note[], currentSortBy: SortBy) => {
@@ -169,8 +186,10 @@ export function NotesProvider({ children }: { children: ReactNode }) {
       setSearchQuery,
       sortBy,
       setSortBy: handleSetSortBy,
+      isSidebarVisible,
+      toggleSidebar,
     }),
-    [notes, isLoading, fetchNotes, upsertNote, deleteNote, searchQuery, sortBy, handleSetSortBy]
+    [notes, isLoading, fetchNotes, upsertNote, deleteNote, searchQuery, sortBy, handleSetSortBy, isSidebarVisible, toggleSidebar]
   );
 
   return <NotesContext.Provider value={value}>{children}</NotesContext.Provider>;

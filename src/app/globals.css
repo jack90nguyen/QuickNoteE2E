@@ -30,6 +30,14 @@ body {
 .markdown-body {
   font-size: var(--font-size-editor);
   line-height: var(--line-height-editor);
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+.markdown-body pre {
+  overflow-x: auto;
+  white-space: pre;
+  word-break: normal;
+  overflow-wrap: normal;
 }
 
 .minimal-md-editor[data-empty="true"]::before {
