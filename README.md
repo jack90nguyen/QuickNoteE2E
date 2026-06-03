@@ -141,4 +141,4 @@ Deploy to Vercel + MongoDB Atlas, or any Node host. Make sure `MONGODB_URI` and 
 
 ## License
 
-Private / personal project.
+Development by Jack90nguyen
